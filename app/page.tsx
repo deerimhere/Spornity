@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X, ChevronDown, Activity, Users, Dumbbell, Calendar, Palette, Bot, MessageSquare } from "lucide-react"
+import { Menu, X, ChevronDown, MapPin, Users, Dumbbell, Calendar, Palette, Bot, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { motion } from 'framer-motion'
@@ -132,7 +132,7 @@ export default function MainPage() {
                     className="min-h-[120px] border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <Button type="submit" size="lg" className="w-full bg-black hover:bg-gray-800 text-white">
-                    <MessageSquare className="mr-2 h-5 w-5" /> AI PT에게 질문하기
+                    <MessageSquare className="mr-2 h-5 w-5" /> AI PT에게 물어보기
                   </Button>
                 </div>
               </form>
@@ -143,7 +143,7 @@ export default function MainPage() {
         <section className="py-20 bg-white dark:bg-gray-800">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
-              <span className="text-blue-500">Spornity</span> 서비스
+              <span className="bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">Spornity</span> 서비스
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <Link href="/facilities" className="group">
@@ -154,7 +154,7 @@ export default function MainPage() {
                   className="flex flex-col items-center text-center"
                 >
                   <div className="w-16 h-16 mb-4 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <Activity className="h-8 w-8 text-blue-500" />
+                    <MapPin className="h-8 w-8 text-blue-500" />
                   </div>
                   <h3 className="text-lg font-bold mb-2">지역 체육 시설</h3>
                   <p className="text-gray-600 dark:text-gray-400">내 주변의 체육 시설을 쉽고 빠르게 찾아보세요.</p>
@@ -248,7 +248,7 @@ export default function MainPage() {
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">빠른 링크</h3>
               <ul className="space-y-2">
                 <li><Link href="/facilities" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 체육 시설</Link></li>
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
