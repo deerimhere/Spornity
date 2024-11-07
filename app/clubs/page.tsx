@@ -2,15 +2,46 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Activity, Users, MapPin, Calendar, Accessibility } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Users, MapPin, Calendar, Accessibility } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
-// 더미 데이터
-const clubsData = {
+// Club 인터페이스 정의
+interface Club {
+  id: number
+  name: string
+  sport: string
+  members: number
+  meetingDay: string
+  location: string
+  disabilityFriendly: boolean
+}
+
+// 지역 및 구 타입 정의
+type Region = '서울' | '부산'
+
+type District = 
+  | '강남구'
+  | '강서구'
+  | '해운대구'
+  | '수영구'
+
+// ClubsData 타입 정의
+type ClubsData = {
+  서울: {
+    강남구: Club[]
+    강서구: Club[]
+  }
+  부산: {
+    해운대구: Club[]
+    수영구: Club[]
+  }
+}
+
+// 더미 데이터 정의
+const clubsData: ClubsData = {
   서울: {
     강남구: [
       { id: 1, name: '강남 러닝 크루', sport: '러닝', members: 50, meetingDay: '매주 토요일', location: '강남구 테헤란로', disabilityFriendly: false },
@@ -34,10 +65,10 @@ const clubsData = {
 }
 
 export default function ClubsPage() {
-  const [selectedRegion, setSelectedRegion] = useState('')
-  const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [selectedRegion, setSelectedRegion] = useState<Region | ''>('')
+  const [selectedDistrict, setSelectedDistrict] = useState<District | ''>('')
   const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
-  const [clubs, setClubs] = useState([])
+  const [clubs, setClubs] = useState<Club[]>([])
   const [showClubs, setShowClubs] = useState(false)
   const [showDistrict, setShowDistrict] = useState(false)
 
@@ -45,10 +76,11 @@ export default function ClubsPage() {
     if (selectedRegion && selectedDistrict) {
       setShowClubs(false)
       setTimeout(() => {
-        let filteredClubs = clubsData[selectedRegion][selectedDistrict] || []
-        if (showDisabilityFriendly) {
-          filteredClubs = filteredClubs.filter(club => club.disabilityFriendly)
-        }
+        const regionData = clubsData[selectedRegion]
+        const districtData = regionData[selectedDistrict]
+        const filteredClubs = showDisabilityFriendly
+          ? districtData.filter(club => club.disabilityFriendly)
+          : districtData
         setClubs(filteredClubs)
         setShowClubs(true)
       }, 300)
@@ -66,10 +98,13 @@ export default function ClubsPage() {
   }, [selectedRegion, selectedDistrict, showDisabilityFriendly])
 
   const handleRegionChange = (value: string) => {
-    setSelectedRegion(value)
-    setSelectedDistrict('')
-    setShowDistrict(false)
-    setTimeout(() => setShowDistrict(true), 50)
+    // value가 Region 타입인지 확인
+    if (value === '서울' || value === '부산') {
+      setSelectedRegion(value)
+      setSelectedDistrict('')
+      setShowDistrict(false)
+      setTimeout(() => setShowDistrict(true), 50)
+    }
   }
 
   return (
@@ -110,12 +145,20 @@ export default function ClubsPage() {
                   <label htmlFor="district-select" className="text-lg font-medium block mb-2">
                     구를 선택하세요
                   </label>
-                  <Select onValueChange={setSelectedDistrict}>
+                  <Select onValueChange={(value: string) => {
+                    // value가 District 타입인지 확인
+                    if (
+                      (selectedRegion === '서울' && (value === '강남구' || value === '강서구')) ||
+                      (selectedRegion === '부산' && (value === '해운대구' || value === '수영구'))
+                    ) {
+                      setSelectedDistrict(value as District)
+                    }
+                  }}>
                     <SelectTrigger id="district-select" className="w-[180px]">
                       <SelectValue placeholder="구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.keys(clubsData[selectedRegion]).map((district) => (
+                      {Object.keys(clubsData[selectedRegion] as Record<string, Club[]>).map((district) => (
                         <SelectItem key={district} value={district}>
                           {district}
                         </SelectItem>

@@ -2,8 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Activity, Book, Calendar, ChevronDown, Image, Clock, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Calendar, Image, Clock, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {

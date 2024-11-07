@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Activity, Phone, Calendar, Clock, DollarSign, Globe, Users, Accessibility } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Activity, Phone, Calendar, Clock, Globe, Users, Accessibility } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
