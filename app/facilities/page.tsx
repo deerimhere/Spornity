@@ -1,14 +1,16 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Activity, MapPin, Phone, Clock, Accessibility } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Activity, MapPin, Phone, Clock, Accessibility, Search, ChevronDown, Menu, X } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { motion } from 'framer-motion'
 
-// 더미 데이터
+// 더미 데이터 (unchanged)
 const facilitiesData = {
   서울: {
     강남구: [
@@ -37,84 +39,156 @@ export default function FacilitiesPage() {
   const [selectedDistrict, setSelectedDistrict] = useState('')
   const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
   const [facilities, setFacilities] = useState([])
-  const [showFacilities, setShowFacilities] = useState(false)
-  const [showDistrict, setShowDistrict] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
     if (selectedRegion && selectedDistrict) {
-      setShowFacilities(false)
-      setTimeout(() => {
-        let filteredFacilities = facilitiesData[selectedRegion][selectedDistrict] || []
-        if (showDisabilityFriendly) {
-          filteredFacilities = filteredFacilities.filter(facility => facility.disabilityFriendly)
-        }
-        setFacilities(filteredFacilities)
-        setShowFacilities(true)
-      }, 300)
+      let filteredFacilities = facilitiesData[selectedRegion][selectedDistrict] || []
+      if (showDisabilityFriendly) {
+        filteredFacilities = filteredFacilities.filter(facility => facility.disabilityFriendly)
+      }
+      setFacilities(filteredFacilities)
     } else {
       setFacilities([])
-      setShowFacilities(false)
-    }
-
-    if (selectedRegion) {
-      setShowDistrict(false)
-      setTimeout(() => setShowDistrict(true), 50)
-    } else {
-      setShowDistrict(false)
     }
   }, [selectedRegion, selectedDistrict, showDisabilityFriendly])
 
   const handleRegionChange = (value: string) => {
     setSelectedRegion(value)
     setSelectedDistrict('')
-    setShowDistrict(false)
-    setTimeout(() => setShowDistrict(true), 50)
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="font-bold text-2xl bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              Spornity
-            </span>
-          </Link>
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
+      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center space-x-2">
+              <span className="font-bold text-2xl bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">
+                Spornity
+              </span>
+            </Link>
+            <nav className="hidden md:flex items-center space-x-8">
+              <div className="relative group">
+                <span className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center">
+                  지역
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </span>
+                <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
+                  <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                    <Link href="/facilities" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">
+                      지역 체육 시설
+                    </Link>
+                    <Link href="/clubs" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">
+                      지역 동호회
+                    </Link>
+                  </div>
+                </div>
+              </div>
+              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                맞춤 운동 추천
+              </Link>
+              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                프로그램
+              </Link>
+              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                소마미술관
+              </Link>
+              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                AI PT
+              </Link>
+            </nav>
+            <div className="flex items-center space-x-4">
+              <Button asChild variant="outline" size="sm" className="hidden md:inline-flex hover:bg-blue-50 dark:hover:bg-blue-900">
+                <Link href="/login">로그인</Link>
+              </Button>
+              <Button asChild size="sm" className="hidden md:inline-flex">
+                <Link href="/signup">회원가입</Link>
+              </Button>
+              <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
+      {isMenuOpen && (
+        <div className="md:hidden bg-white dark:bg-gray-800 py-4">
+          <nav className="container mx-auto px-4 flex flex-col space-y-4">
+            <div className="flex flex-col space-y-2">
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">지역</span>
+              <Link href="/facilities" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors pl-4">
+                지역 체육 시설
+              </Link>
+              <Link href="/clubs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors pl-4">
+                지역 동호회
+              </Link>
+            </div>
+            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              맞춤 운동 추천
+            </Link>
+            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              프로그램
+            </Link>
+            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              소마미술관
+            </Link>
+            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              AI PT
+            </Link>
+            <Link href="/login" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              로그인
+            </Link>
+            <Link href="/signup" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              회원가입
+            </Link>
+          </nav>
+        </div>
+      )}
+
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none mb-8 text-black">
+        <section className="py-20 md:py-32">
+          <div className="container mx-auto px-4">
+            <motion.h1 
+              className="text-4xl md:text-6xl font-bold mb-8 text-center text-gray-800 dark:text-gray-200"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
               지역 체육 시설 검색
-            </h1>
-            <div className="flex flex-col space-y-4 mb-8">
-              <div>
-                <label htmlFor="region-select" className="text-lg font-medium block mb-2">
-                  지역을 선택하세요
-                </label>
-                <Select onValueChange={handleRegionChange}>
-                  <SelectTrigger id="region-select" className="w-[180px]">
-                    <SelectValue placeholder="지역 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="서울">서울</SelectItem>
-                    <SelectItem value="부산">부산</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {selectedRegion && (
-                <div className={`transition-opacity duration-300 ${showDistrict ? 'opacity-100' : 'opacity-0'}`}>
-                  <label htmlFor="district-select" className="text-lg font-medium block mb-2">
-                    구를 선택하세요
+            </motion.h1>
+            <motion.div 
+              className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <div className="grid gap-6 md:grid-cols-3 mb-6">
+                <div>
+                  <label htmlFor="region-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                    지역
                   </label>
-                  <Select onValueChange={setSelectedDistrict}>
-                    <SelectTrigger id="district-select" className="w-[180px]">
+                  <Select onValueChange={handleRegionChange}>
+                    <SelectTrigger id="region-select" className="w-full">
+                      <SelectValue placeholder="지역 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="서울">서울</SelectItem>
+                      <SelectItem value="부산">부산</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor="district-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                    구
+                  </label>
+                  <Select onValueChange={setSelectedDistrict} disabled={!selectedRegion}>
+                    <SelectTrigger id="district-select" className="w-full">
                       <SelectValue placeholder="구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.keys(facilitiesData[selectedRegion]).map((district) => (
+                      {selectedRegion && Object.keys(facilitiesData[selectedRegion]).map((district) => (
                         <SelectItem key={district} value={district}>
                           {district}
                         </SelectItem>
@@ -122,67 +196,103 @@ export default function FacilitiesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="disability-friendly"
-                  checked={showDisabilityFriendly}
-                  onCheckedChange={setShowDisabilityFriendly}
-                />
-                <Label htmlFor="disability-friendly">장애인 친화 시설만 보기</Label>
-              </div>
-            </div>
-            {selectedRegion && selectedDistrict && (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">
-                  {selectedRegion} {selectedDistrict}의 체육 시설
-                  {showDisabilityFriendly && ' - 장애인 친화'}
-                </h2>
-                <div className={`grid gap-6 md:grid-cols-2 lg:grid-cols-3 transition-opacity duration-300 ${showFacilities ? 'opacity-100' : 'opacity-0'}`}>
-                  {facilities.map((facility) => (
-                    <Card key={facility.id} className="h-full">
-                      <CardHeader>
-                        <CardTitle className="flex items-center">
-                          <Activity className="text-blue-500 mr-2 h-4 w-4" /> {facility.name}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="font-semibold mb-2 text-blue-600">{facility.type}</p>
-                        <p className="text-sm text-muted-foreground mb-1 flex items-center">
-                          <MapPin className="text-blue-500 mr-2 h-4 w-4" /> {facility.address}
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-1 flex items-center">
-                          <Phone className="text-blue-500 mr-2 h-4 w-4" /> {facility.phone}
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-1 flex items-center">
-                          <Clock className="text-blue-500 mr-2 h-4 w-4" /> {facility.hours}
-                        </p>
-                        <p className="text-sm text-muted-foreground flex items-center">
-                          <Accessibility className="text-blue-500 mr-2 h-4 w-4" /> 
-                          장애인 친화: {facility.disabilityFriendly ? '예' : '아니오'}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="disability-friendly"
+                    checked={showDisabilityFriendly}
+                    onCheckedChange={setShowDisabilityFriendly}
+                  />
+                  <Label htmlFor="disability-friendly" className="text-sm text-gray-700 dark:text-gray-300">장애인 친화 시설만 보기</Label>
                 </div>
               </div>
-            )}
-            {(!selectedRegion || !selectedDistrict) && (
-              <p className="text-lg text-muted-foreground">지역과 구를 선택하면 해당 지역의 체육 시설 목록이 표시됩니다.</p>
+              <Button className="w-full" disabled={!selectedRegion || !selectedDistrict}>
+                <Search className="mr-2 h-4 w-4" /> 검색
+              </Button>
+            </motion.div>
+            {facilities.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+              >
+                <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-200">
+                  {selectedRegion} {selectedDistrict}의 체육 시설
+                  {showDisabilityFriendly && ' (장애인 친화)'}
+                </h2>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {facilities.map((facility, index) => (
+                    <motion.div
+                      key={facility.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <Card className="h-full hover:shadow-lg transition-shadow duration-300">
+                        <CardContent className="p-6">
+                          <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">{facility.name}</h3>
+                          <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-4">{facility.type}</p>
+                          <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                            <p className="flex items-center">
+                              <MapPin className="text-blue-500 mr-2 h-4 w-4" /> {facility.address}
+                            </p>
+                            <p className="flex items-center">
+                              <Phone className="text-blue-500 mr-2 h-4 w-4" /> {facility.phone}
+                            </p>
+                            <p className="flex items-center">
+                              <Clock className="text-blue-500 mr-2 h-4 w-4" /> {facility.hours}
+                            </p>
+                            <p className="flex items-center">
+                              <Accessibility className="text-blue-500 mr-2 h-4 w-4" /> 
+                              장애인 친화: {facility.disabilityFriendly ? '예' : '아니오'}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : (
+              <div className="text-center py-12">
+                <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-xl text-gray-600 dark:text-gray-400">지역과 구를 선택하여 체육 시설을 검색해보세요.</p>
+              </div>
             )}
           </div>
         </section>
       </main>
 
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-muted-foreground">
-          © 2024 Spornity. 모든 권리 보유.
-        </p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link href="#" className="text-xs hover:underline underline-offset-4">이용약관</Link>
-          <Link href="#" className="text-xs hover:underline underline-offset-4">개인정보처리방침</Link>
-          <Link href="#" className="text-xs hover:underline underline-offset-4">접근성 정책</Link>
-        </nav>
+      <footer className="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto py-12 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
+              <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
+              <ul className="space-y-2">
+                <li><Link href="/facilities" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 체육 시설</Link></li>
+                <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">체력 진단</Link></li>
+                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">고객 지원</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">이용약관</Link></li>
+                <li><Link href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">개인정보처리방침</Link></li>
+                <li><Link href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">접근성 정책</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-center text-gray-600 dark:text-gray-400">
+              © 2024 <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</span>. All rights reserved.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   )

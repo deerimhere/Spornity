@@ -1,21 +1,32 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X, ChevronDown, Activity, Users, Dumbbell, Calendar, Palette, Bot, MessageSquare } from "lucide-react"
+import { ChevronDown, Menu, X, Dumbbell, Clipboard, MessageSquare, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion"
 
-export default function MainPage() {
+export default function AIPTPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [userInput, setUserInput] = useState('')
-  const router = useRouter()
+  const [userInput, setUserInput] = useState("")
+  const [aiResponse, setAiResponse] = useState("")
+  const searchParams = useSearchParams()
 
-  const handleAIPTSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const question = searchParams.get('question')
+    if (question) {
+      setUserInput(question)
+      handleSubmit(new Event('submit') as React.FormEvent)
+    }
+  }, [searchParams])
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    router.push(`/ai-pt?question=${encodeURIComponent(userInput)}`)
+    // 여기에 LLM 모델 호출 로직을 추가할 예정입니다.
+    setAiResponse(`AI PT의 응답: "${userInput}"에 대한 답변입니다.`)
   }
 
   return (
@@ -108,133 +119,93 @@ export default function MainPage() {
       )}
 
       <main className="flex-1">
-        <section className="py-20 md:py-32">
-          <div className="container mx-auto px-4">
+        <section className="w-full py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-center"
+              className="text-center mb-12"
             >
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                당신의 건강한 삶을 위한 모든 것
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl md:text-6xl/none bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                AI 퍼스널 트레이너
               </h1>
-              <p className="text-xl md:text-2xl mb-12 text-gray-600 dark:text-gray-300">
-                <span className="bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">Spornity</span>와 함께 더 건강하고 활기찬 라이프스타일을 만들어보세요.
+              <p className="mx-auto max-w-[700px] text-gray-600 dark:text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed mt-4">
+                개인 맞춤형 운동 계획과 조언을 AI로 받아보세요. 당신의 건강한 라이프스타일을 위한 첫 걸음입니다.
               </p>
-              <form onSubmit={handleAIPTSubmit} className="max-w-2xl mx-auto">
-                <div className="flex flex-col gap-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">AI PT에게 물어보세요</h2>
-                  <Textarea
-                    placeholder="운동 계획, 식단, 건강 조언 등에 대해 물어보세요."
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    className="min-h-[120px] border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Button type="submit" size="lg" className="w-full bg-black hover:bg-gray-800 text-white">
-                    <MessageSquare className="mr-2 h-5 w-5" /> AI PT에게 질문하기
-                  </Button>
-                </div>
-              </form>
             </motion.div>
-          </div>
-        </section>
 
-        <section className="py-20 bg-white dark:bg-gray-800">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
-              <span className="text-blue-500">Spornity</span> 서비스
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <Link href="/facilities" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <Activity className="h-8 w-8 text-blue-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">지역 체육 시설</h3>
-                  <p className="text-gray-600 dark:text-gray-400">내 주변의 체육 시설을 쉽고 빠르게 찾아보세요.</p>
-                </motion.div>
-              </Link>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>AI PT에게 물어보세요</CardTitle>
+                  <CardDescription>운동 계획, 식단, 건강 조언 등 무엇이든 물어보세요.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <Textarea
+                      placeholder="예: 30대 초반 남성입니다. 체중 감량과 근력 향상을 위한 운동 계획을 추천해주세요."
+                      value={userInput}
+                      onChange={(e) => setUserInput(e.target.value)}
+                      className="min-h-[100px]"
+                    />
+                    <Button type="submit" className="w-full">
+                      <MessageSquare className="mr-2 h-4 w-4" /> AI PT에게 질문하기
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
 
-              <Link href="/clubs" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                    <Users className="h-8 w-8 text-green-500" />
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>AI PT의 응답</CardTitle>
+                  <CardDescription>맞춤형 조언과 계획을 확인하세요.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md min-h-[200px]">
+                    {aiResponse || "AI PT의 응답이 여기에 표시됩니다."}
                   </div>
-                  <h3 className="text-lg font-bold mb-2">지역 동호회</h3>
-                  <p className="text-gray-600 dark:text-gray-400">같은 관심사를 가진 사람들과 함께 운동하세요.</p>
-                </motion.div>
-              </Link>
+                </CardContent>
+              </Card>
+            </div>
 
-              <Link href="/fitness" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <Dumbbell className="h-8 w-8 text-purple-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">맞춤 운동 추천</h3>
-                  <p className="text-gray-600 dark:text-gray-400">개인의 체력과 목표에 맞는 운동 프로그램을 추천받으세요.</p>
-                </motion.div>
-              </Link>
-
-              <Link href="/programs" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-                    <Calendar className="h-8 w-8 text-yellow-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">프로그램</h3>
-                  <p className="text-gray-600 dark:text-gray-400">다양한 공공체육시설의 프로그램 정보를 확인하세요.</p>
-                </motion.div>
-              </Link>
-
-              <Link href="/soma" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors">
-                    <Palette className="h-8 w-8 text-pink-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">소마미술관</h3>
-                  <p className="text-gray-600 dark:text-gray-400">운동과 문화생활을 동시에 즐겨보세요.</p>
-                </motion.div>
-              </Link>
-
-              <Link href="/ai-pt" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                    <Bot className="h-8 w-8 text-red-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">AI PT</h3>
-                  <p className="text-gray-600 dark:text-gray-400">AI 기술을 활용한 개인 맞춤형 트레이닝을 경험해보세요.</p>
-                </motion.div>
-              </Link>
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold mb-6 text-center">AI PT의 주요 기능</h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Dumbbell className="mr-2 h-5 w-5" />
+                      맞춤형 운동 계획
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>개인의 목표, 체력 수준, 선호도에 맞는 운동 계획을 제공합니다.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Clipboard className="mr-2 h-5 w-5" />
+                      영양 및 식단 조언
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>건강한 식단 구성과 영양 섭취에 대한 조언을 제공합니다.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <User className="mr-2 h-5 w-5" />
+                      건강 상담
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>일반적인 건강 관련 질문에 대한 답변과 조언을 제공합니다.</p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </section>
