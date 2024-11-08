@@ -1,44 +1,194 @@
-"use client"
+'use client'
 
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
-import { Calendar, Image, Clock, Users, ChevronDown, Menu, X } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Calendar, Book, Clock, Users, ChevronDown, Menu, X, Search, User, Building, ArrowRight } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { motion, AnimatePresence } from "framer-motion"
+import Papa from 'papaparse'
+import { format, isAfter, isBefore, parseISO } from 'date-fns'
 
-// 더미 데이터
-const educationPrograms = [
-  { id: 1, title: "어린이 미술 교실", description: "창의적인 미술 수업", schedule: "매주 토요일 10:00-12:00", period: "2024.03.01 - 2024.06.30", target: "7-12세 어린이" },
-  { id: 2, title: "성인 드로잉 클래스", description: "초보자를 위한 기초 드로잉 강좌", schedule: "매주 화요일 19:00-21:00", period: "2024.04.01 - 2024.07.31", target: "성인" },
-  { id: 3, title: "현대미술 이해하기", description: "현대미술의 주요 흐름과 작가들에 대한 강의", schedule: "격주 목요일 14:00-16:00", period: "2024.05.01 - 2024.08.31", target: "청소년 및 성인" },
-]
+interface Collection {
+  서적명: string
+  작가명: string
+  출판사명: string
+  발행년도: string
+}
 
-const collections = [
-  { id: 1, title: "한국 현대미술 컬렉션", description: "1950년대 이후 한국 현대미술 작품 300여 점", imageUrl: "/placeholder.svg?height=100&width=100" },
-  { id: 2, title: "국제 조각 컬렉션", description: "국내외 유명 조각가들의 작품 50여 점", imageUrl: "/placeholder.svg?height=100&width=100" },
-  { id: 3, title: "미디어 아트 컬렉션", description: "비디오 아트 및 설치 작품 100여 점", imageUrl: "/placeholder.svg?height=100&width=100" },
-]
+interface EducationProgram {
+  교육종류명: string
+  교육명: string
+  교육대상명: string
+  정원: string
+  교육시작일자: number
+  교육종료일자: number
+  교육장소명: string
+  교육비용: string
+  "교육 설명내용": string
+  상세설명내용: string
+  신청인원수: string
+  접수상태: string
+  url: string
+  접수기간: string
+  운영기간: string
+  교육대상전처리: string
+}
 
-const exhibitions = [
-  { id: 1, title: "빛과 그림자: 현대 사진전", artist: "다양한 작가", period: "2024.03.01 - 2024.05.31", description: "현대 사진 작가들의 실험적 작품 전시" },
-  { id: 2, title: "자연과 인간: 생태미술전", artist: "김자연, 이환경 외 5명", period: "2024.04.15 - 2024.07.15", description: "환경 문제를 다루는 현대 미술 작품 전시" },
-  { id: 3, title: "디지털 아트의 미래", artist: "AI 아티스트 그룹", period: "2024.06.01 - 2024.08.31", description: "AI와 인간 협업으로 만들어진 디지털 아트 전시" },
-]
+interface Exhibition {
+  전시실명: string
+  전시명: string
+  전시시작일자: string
+  전시종료일자: string
+  전시상태: string
+  장소명: string
+  주관기관명: string
+  작가명: string
+  작품명: string
+  관람시간: string
+  관람정보: string
+  전자책URL: string
+  전자책명: string
+  전시이미지URL: string
+  전시이미지명: string
+  전시영문명: string
+  전시영문내용: string
+}
+
+interface Filters {
+  교육종류: string
+  교육대상: string
+  접수상태: string
+}
 
 export default function SomaMuseumPage() {
-  const [activeTab, setActiveTab] = useState("education")
+  const [activeTab, setActiveTab] = useState("exhibition")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [collections, setCollections] = useState<Collection[]>([])
+  const [educationPrograms, setEducationPrograms] = useState<EducationProgram[]>([])
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [exhibitionSearchTerm, setExhibitionSearchTerm] = useState("")
+  const [filters, setFilters] = useState<Filters>({
+    교육종류: "전체",
+    교육대상: "전체",
+    접수상태: "전체"
+  })
+
+  const filterOptions = useMemo(() => {
+    if (!educationPrograms.length) return {
+      교육종류: ["전체"],
+      교육대상: ["전체"],
+      접수상태: ["전체"]
+    }
+
+    return {
+      교육종류: ["전체", ...new Set(educationPrograms.map(p => p.교육종류명))],
+      교육대상: ["전체", ...new Set(educationPrograms.map(p => p.교육대상전처리))],
+      접수상태: ["전체", ...new Set(educationPrograms.map(p => p.접수상태))]
+    }
+  }, [educationPrograms])
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%86%8C%EB%A7%88%EB%AF%B8%EC%88%A0%EA%B4%80%EC%86%8C%EC%9E%A5%EC%9E%90%EB%A3%8C%EB%8D%B0%EC%9D%B4%ED%84%B0-F6rUYHFoBpmkm21C8mruFJAa2MuQCE.csv')
+      const reader = response.body?.getReader()
+      const result = await reader?.read()
+      const decoder = new TextDecoder('utf-8')
+      const csv = decoder.decode(result?.value)
+      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
+      setCollections(results.data as Collection[])
+    }
+
+    const fetchEducationPrograms = async () => {
+      const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/soma-education-programs-IDK7p4nbtxIQrjTy44gK9nNVjECCJh.csv')
+      const reader = response.body?.getReader()
+      const result = await reader?.read()
+      const decoder = new TextDecoder('utf-8')
+      const csv = decoder.decode(result?.value)
+      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
+      setEducationPrograms(results.data as EducationProgram[])
+    }
+
+    const fetchExhibitions = async () => {
+      const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/soma-exhibitions-mnnIYBHb0CO1JNJCk2m3dQC10869x2.csv')
+      const reader = response.body?.getReader()
+      const result = await reader?.read()
+      const decoder = new TextDecoder('utf-8')
+      const csv = decoder.decode(result?.value)
+      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
+      setExhibitions(results.data as Exhibition[])
+    }
+
+    fetchCollections()
+    fetchEducationPrograms()
+    fetchExhibitions()
+  }, [])
+
+  const filteredCollections = collections.filter(collection =>
+    Object.values(collection).some(value =>
+      value.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  )
+
+  const filteredEducationPrograms = useMemo(() => {
+    return educationPrograms.filter(program => {
+      const matchesSearch = Object.values(program).some(value =>
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+
+      const matchesType = filters.교육종류 === "전체" || program.교육종류명 === filters.교육종류
+      const matchesTarget = filters.교육대상 === "전체" || program.교육대상전처리 === filters.교육대상
+      const matchesStatus = filters.접수상태 === "전체" || program.접수상태 === filters.접수상태
+
+      return matchesSearch && matchesType && matchesTarget && matchesStatus
+    }).sort((a, b) => {
+      if (a.접수상태 === '접수중' && b.접수상태 !== '접수중') return -1;
+      if (a.접수상태 !== '접수중' && b.접수상태 === '접수중') return 1;
+      return new Date(a.교육시작일자).getTime() - new Date(b.교육시작일자).getTime();
+    })
+  }, [educationPrograms, searchTerm, filters])
+
+  const filteredExhibitions = useMemo(() => {
+    const currentDate = new Date()
+    return exhibitions
+      .map(exhibition => ({
+        ...exhibition,
+        status: isAfter(currentDate, parseISO(exhibition.전시종료일자))
+          ? '종료'
+          : isBefore(currentDate, parseISO(exhibition.전시시작일자))
+          ? '예정'
+          : '진행중'
+      }))
+      .filter(exhibition => 
+        exhibition.전시명.toLowerCase().includes(exhibitionSearchTerm.toLowerCase()) ||
+        exhibition.작가명.toLowerCase().includes(exhibitionSearchTerm.toLowerCase())
+      )
+      .sort((a, b) => new Date(b.전시시작일자).getTime() - new Date(a.전시시작일자).getTime())
+  }, [exhibitions, exhibitionSearchTerm])
+
+  const currentExhibitions = filteredExhibitions.filter(ex => ex.status === '진행중')
+  const pastExhibitions = filteredExhibitions.filter(ex => ex.status === '종료')
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="font-bold text-2xl bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">
+              <span className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Spornity
               </span>
             </Link>
@@ -122,36 +272,48 @@ export default function SomaMuseumPage() {
       )}
 
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 relative">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-gDkCL29AGe6N4l5rlaSVLKzpmxAnpG.png')] bg-cover bg-center"></div>
-          <div className="absolute inset-0 bg-gray-900 opacity-50"></div>
+          <div className="absolute inset-0 bg-black opacity-60"></div>
           <div className="container px-4 md:px-6 relative z-10">
-            <motion.h1 
-              className="text-3xl font-bold tracking-tighter sm:text-5xl md:text-6xl/none text-white text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              소마미술관에 오신 것을 환영합니다
-            </motion.h1>
-            <motion.p 
-              className="mx-auto max-w-[700px] text-white text-center mt-4 md:text-xl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              예술과 문화의 중심, 소마미술관에서 특별한 경험을 만나보세요
-            </motion.p>
+            <div className="flex flex-col items-center text-center">
+              <motion.h1 
+                className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none text-white mb-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                소마미술관에 오신 것을 환영합니다
+              </motion.h1>
+              <motion.p 
+                className="max-w-[600px] text-white text-xl md:text-2xl mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                예술과 문화의 중심.<br />
+                소마미술관에서 특별한 경험을 만나보세요
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20}}
+                animate={{opacity: 1, y: 0}}
+                transition={{duration: 0.8, delay: 0.4}}
+              >
+                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100">
+                  전시 둘러보기 <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </section>
 
-        <section className="w-full py-12 md:py-24 lg:py-32">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-900">
           <div className="container px-4 md:px-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="education">교육 프로그램</TabsTrigger>
-                <TabsTrigger value="collection">소장 자료</TabsTrigger>
-                <TabsTrigger value="exhibition">현재 전시</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mb-8">
+                <TabsTrigger value="exhibition" className="text-lg">전시 정보</TabsTrigger>
+                <TabsTrigger value="education" className="text-lg">교육 프로그램</TabsTrigger>
+                <TabsTrigger value="collection" className="text-lg">소장 자료</TabsTrigger>
               </TabsList>
               <AnimatePresence mode="wait">
                 <motion.div
@@ -161,72 +323,245 @@ export default function SomaMuseumPage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                 >
+                  <TabsContent value="exhibition" className="mt-6">
+                    <h2 className="text-3xl font-bold mb-8 text-center">전시 정보</h2>
+                    <div className="mb-8">
+                      <div className="relative max-w-md mx-auto">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Input
+                          type="text"
+                          placeholder="전시명, 작가명으로 검색하세요"
+                          value={exhibitionSearchTerm}
+                          onChange={(e) => setExhibitionSearchTerm(e.target.value)}
+                          className="pl-10 py-2 text-lg bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-full focus:border-blue-500 dark:focus:border-blue-400"
+                        />
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold mb-4">현재 전시</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                      {currentExhibitions.map((exhibition, index) => (
+                        <ExhibitionCard key={index} exhibition={exhibition} />
+                      ))}
+                    </div>
+
+                    <h3 className="text-2xl font-bold mb-4">지난 전시</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {pastExhibitions.map((exhibition, index) => (
+                        <ExhibitionCard key={index} exhibition={exhibition} />
+                      ))}
+                    </div>
+                  </TabsContent>
                   <TabsContent value="education" className="mt-6">
-                    <h2 className="text-2xl font-bold mb-4">교육 프로그램</h2>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {educationPrograms.map((program) => (
-                        <Card key={program.id} className="hover:shadow-lg transition-shadow duration-300">
-                          <CardHeader>
-                            <CardTitle>{program.title}</CardTitle>
-                            <CardDescription>{program.description}</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                              <Calendar className="inline-block w-4 h-4 mr-2" />
-                              {program.schedule}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                              <Clock className="inline-block w-4 h-4 mr-2" />
-                              {program.period}
-                            </p>
-                            <p className="text-sm font-semibold">
-                              <Users className="inline-block w-4 h-4 mr-2" />
-                              대상: {program.target}
-                            </p>
-                          </CardContent>
-                        </Card>
+                    <h2 className="text-3xl font-bold mb-8 text-center">교육 프로그램</h2>
+                    <div className="mb-8 space-y-4">
+                      <div className="relative max-w-md mx-auto">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Input
+                          type="text"
+                          placeholder="프로그램명, 대상으로 검색하세요"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 py-2 text-lg bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-full focus:border-blue-500 dark:focus:border-blue-400"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                        <Select
+                          value={filters.교육종류}
+                          onValueChange={(value) => setFilters(prev => ({ ...prev, 교육종류: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="교육 종류" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filterOptions.교육종류.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={filters.교육대상}
+                          onValueChange={(value) => setFilters(prev => ({ ...prev, 교육대상: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="교육 대상" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filterOptions.교육대상.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={filters.접수상태}
+                          onValueChange={(value) => setFilters(prev => ({ ...prev, 접수상태: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="접수 상태" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filterOptions.접수상태.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredEducationPrograms.map((program, index) => (
+                        <Dialog key={index}>
+                          <DialogTrigger asChild>
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.5, delay: index * 0.1 }}
+                              className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+                            >
+                              <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+                                {program.교육명}
+                              </h3>
+                              <div className="flex justify-between items-center mb-2">
+                                <p className="text-gray-600 dark:text-gray-400">{program.교육종류명}</p>
+                                <Badge variant={program.접수상태 === '접수마감' ? 'secondary' : 'default'}>
+                                  {program.접수상태}
+                                </Badge>
+                              </div>
+                              <div className="mt-4 space-y-2 text-sm">
+                                <p className="flex items-center text-gray-500">
+                                  <Users className="w-4 h-4 mr-2" />
+                                  {program.교육대상전처리} ({program.교육대상명})
+                                </p>
+                                <p className="flex items-center text-gray-500">
+                                  <Calendar className="w-4 h-4 mr-2" />
+                                  {program.교육시작일자} - {program.교육종료일자}
+                                </p>
+                              </div>
+                            </motion.div>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle className="text-2xl font-bold">{program.교육명}</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                <h4 className="font-semibold text-sm text-gray-500 mb-1">교육 종류</h4>
+                                <p className="text-lg">{program.교육종류명}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-gray-500 mb-1">교육 대상</h4>
+                                <p className="text-lg">{program.교육대상전처리}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-gray-500 mb-1">세부 대상</h4>
+                                <p className="text-lg">{program.교육대상명}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-gray-500 mb-1">정원</h4>
+                                <p className="text-lg">{program.정원}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-gray-500 mb-1">교육 장소</h4>
+                                <p className="text-lg">{program.교육장소명}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-gray-500 mb-1">교육 기간</h4>
+                                <p className="text-lg">{program.교육시작일자} - {program.교육종료일자}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-gray-500 mb-1">교육 비용</h4>
+                                <p className="text-lg">{program.교육비용}</p>
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-lg mb-2">교육 설명</h4>
+                              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                                {program["교육 설명내용"]}
+                              </p>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-lg mb-2">상세 설명</h4>
+                              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                                {program.상세설명내용}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="secondary">{program.접수상태}</Badge>
+                              <Badge variant="secondary">신청인원: {program.신청인원수}</Badge>
+                            </div>
+                            <Button asChild className="w-full">
+                              <a href={program.url} target="_blank" rel="noopener noreferrer">
+                                자세히 보기
+                              </a>
+                            </Button>
+                          </DialogContent>
+                        </Dialog>
                       ))}
                     </div>
                   </TabsContent>
                   <TabsContent value="collection" className="mt-6">
-                    <h2 className="text-2xl font-bold mb-4">소장 자료</h2>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {collections.map((collection) => (
-                        <Card key={collection.id} className="hover:shadow-lg transition-shadow duration-300">
-                          <CardHeader>
-                            <CardTitle className="flex items-center">
-                              <Image className="w-6 h-6 mr-2" />
-                              {collection.title}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <img
-                              src={collection.imageUrl}
-                              alt={collection.title}
-                              className="w-full h-48 object-cover mb-4 rounded-md"
-                            />
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {collection.description}
-                            </p>
-                          </CardContent>
-                        </Card>
+                    <h2 className="text-3xl font-bold mb-8 text-center">소장 자료</h2>
+                    <div className="mb-8">
+                      <div className="relative max-w-md mx-auto">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Input
+                          type="text"
+                          placeholder="작품명, 작가명으로 검색하세요"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 py-2 text-lg bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-full focus:border-blue-500 dark:focus:border-blue-400"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                      {filteredCollections.map((collection, index) => (
+                        <Dialog key={index}>
+                          <DialogTrigger asChild>
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.5, delay: index * 0.1 }}
+                              className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+                            >
+                              <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+                                {collection.서적명}
+                              </h3>
+                              <p className="text-gray-600 dark:text-gray-400">{collection.작가명}</p>
+                              <p className="text-gray-500 dark:text-gray-500 mt-2">{collection.발행년도}</p>
+                            </motion.div>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle className="text-2xl font-bold">{collection.서적명}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6">
+                              <div>
+                                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{collection.작가명}</p>
+                                <p className="text-gray-600 dark:text-gray-400">{collection.출판사명} | {collection.발행년도}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-lg mb-2">작품 설명</h4>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                  이 작품은 소마미술관의 주요 소장품 중 하나로, 작가의 독특한 예술 세계를 잘 보여주는 대표작입니다.
+                                  작품의 구성과 표현 기법은 당대의 예술적 흐름을 잘 반영하고 있으며, 
+                                  현대 미술사에서 중요한 의미를 지니고 있습니다.
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="secondary">도서</Badge>
+                                <Badge variant="secondary">{collection.발행년도}</Badge>
+                                <Badge variant="secondary">소장품</Badge>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       ))}
                     </div>
-                  </TabsContent>
-                  <TabsContent value="exhibition" className="mt-6">
-                    <h2 className="text-2xl font-bold mb-4">현재 전시</h2>
-                    <Accordion type="single" collapsible className="w-full">
-                      {exhibitions.map((exhibition) => (
-                        <AccordionItem key={exhibition.id} value={`item-${exhibition.id}`}>
-                          <AccordionTrigger>{exhibition.title}</AccordionTrigger>
-                          <AccordionContent>
-                            <p className="font-semibold mb-2">{exhibition.artist}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{exhibition.period}</p>
-                            <p className="text-gray-700 dark:text-gray-300">{exhibition.description}</p>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
                   </TabsContent>
                 </motion.div>
               </AnimatePresence>
@@ -235,11 +570,11 @@ export default function SomaMuseumPage() {
         </section>
       </main>
 
-      <footer className="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="container mx-auto py-12 px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
+              <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
             </div>
             <div>
@@ -262,11 +597,87 @@ export default function SomaMuseumPage() {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
             <p className="text-center text-gray-600 dark:text-gray-400">
-              © 2024 <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</span>. All rights reserved.
+              © 2024 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</span>. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
     </div>
+  )
+}
+
+function ExhibitionCard({ exhibition }: { exhibition: Exhibition }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+        >
+          <div className="aspect-w-16 aspect-h-9 mb-4">
+            <img
+              src={`https://soma.kspo.or.kr${exhibition.전시이미지URL}`}
+              alt={exhibition.전시이미지명}
+              className="object-cover rounded-lg w-full h-auto"
+              style={{ maxWidth: '60%', margin: '0 auto' }}
+            />
+          </div>
+          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+            {exhibition.전시명}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">{exhibition.작가명}</p>
+          <div className="mt-4 flex justify-between items-center">
+            <p className="text-sm text-gray-500">
+              {format(parseISO(exhibition.전시시작일자), 'yyyy.MM.dd')} - {format(parseISO(exhibition.전시종료일자), 'yyyy.MM.dd')}
+            </p>
+            <Badge variant={exhibition.status === '진행중' ? 'default' : 'secondary'}>
+              {exhibition.status}
+            </Badge>
+          </div>
+        </motion.div>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">{exhibition.전시명}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6">
+          <img
+            src={`https://soma.kspo.or.kr${exhibition.전시이미지URL}`}
+            alt={exhibition.전시이미지명}
+            className="w-full h-auto rounded-lg"
+            style={{ maxWidth: '60%', margin: '0 auto' }}
+          />
+          <div>
+            <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{exhibition.작가명}</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {format(parseISO(exhibition.전시시작일자), 'yyyy.MM.dd')} - {format(parseISO(exhibition.전시종료일자), 'yyyy.MM.dd')}
+            </p>
+          </div>
+          <div>
+            <h4 className="font-bold text-lg mb-2">전시 설명</h4>
+            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
+              {exhibition.전시영문내용}
+            </p>
+          </div>
+          <div>
+            <h4 className="font-bold text-lg mb-2">관람 정보</h4>
+            <p className="text-gray-600 dark:text-gray-400">
+              <span className="font-semibold">장소:</span> {exhibition.장소명}<br />
+              <span className="font-semibold">관람 시간:</span> {exhibition.관람시간}<br />
+              <span className="font-semibold">관람 정보:</span> {exhibition.관람정보}
+            </p>
+          </div>
+          {exhibition.전자책URL && (
+            <Button asChild className="w-full">
+              <a href={exhibition.전자책URL} target="_blank" rel="noopener noreferrer">
+                전자책 보기
+              </a>
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

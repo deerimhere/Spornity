@@ -2,95 +2,88 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Users, MapPin, Calendar, Accessibility, Search, Menu, X } from "lucide-react"
+import { Users, MapPin, Calendar, Accessibility, Search, Menu, X, ChevronDown } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { motion } from 'framer-motion'
+import Papa from 'papaparse'
 
-// Club 인터페이스 정의
 interface Club {
-  id: number
+  id: string
   name: string
   sport: string
-  members: number
+  members: string
   meetingDay: string
   location: string
-  disabilityFriendly: boolean
-}
-
-// 지역 및 구 타입 정의
-type Region = '서울' | '부산'
-
-type District = 
-  | '강남구'
-  | '강서구'
-  | '해운대구'
-  | '수영구'
-
-// ClubsData 타입 정의
-type ClubsData = {
-  서울: {
-    강남구: Club[]
-    강서구: Club[]
-  }
-  부산: {
-    해운대구: Club[]
-    수영구: Club[]
-  }
-}
-
-// 더미 데이터 정의
-const clubsData: ClubsData = {
-  서울: {
-    강남구: [
-      { id: 1, name: '강남 러닝 크루', sport: '러닝', members: 50, meetingDay: '매주 토요일', location: '강남구 테헤란로', disabilityFriendly: false },
-      { id: 2, name: '청담 테니스 클럽', sport: '테니스', members: 30, meetingDay: '매주 일요일', location: '강남구 청담동', disabilityFriendly: true },
-    ],
-    강서구: [
-      { id: 3, name: '강서 축구 동호회', sport: '축구', members: 40, meetingDay: '매주 토요일', location: '강서구 화곡동', disabilityFriendly: false },
-      { id: 4, name: '마곡 배드민턴 클럽', sport: '배드민턴', members: 25, meetingDay: '매주 수요일', location: '강서구 마곡동', disabilityFriendly: true },
-    ],
-  },
-  부산: {
-    해운대구: [
-      { id: 5, name: '해운대 비치 발리볼', sport: '비치발리볼', members: 20, meetingDay: '매주 토요일', location: '해운대구 우동', disabilityFriendly: false },
-      { id: 6, name: '센텀 농구 동호회', sport: '농구', members: 15, meetingDay: '매주 금요일', location: '해운대구 우동', disabilityFriendly: true },
-    ],
-    수영구: [
-      { id: 7, name: '광안리 서핑 클럽', sport: '서핑', members: 35, meetingDay: '매주 토요일', location: '수영구 광안동', disabilityFriendly: false },
-      { id: 8, name: '민락 수영 동호회', sport: '수영', members: 40, meetingDay: '매주 월요일', location: '수영구 민락동', disabilityFriendly: true },
-    ],
-  },
+  disabilityFriendly: string
+  region: string
+  district: string
 }
 
 export default function ClubsPage() {
-  const [selectedRegion, setSelectedRegion] = useState<Region | ''>('')
-  const [selectedDistrict, setSelectedDistrict] = useState<District | ''>('')
-  const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
   const [clubs, setClubs] = useState<Club[]>([])
+  const [filteredClubs, setFilteredClubs] = useState<Club[]>([])
+  const [selectedRegion, setSelectedRegion] = useState('')
+  const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [uniqueRegions, setUniqueRegions] = useState<string[]>([])
+  const [uniqueDistricts, setUniqueDistricts] = useState<string[]>([])
 
   useEffect(() => {
-    if (selectedRegion && selectedDistrict) {
-      const regionData = clubsData[selectedRegion]
-      const districtData = regionData[selectedDistrict]
-      const filteredClubs = showDisabilityFriendly
-        ? districtData.filter(club => club.disabilityFriendly)
-        : districtData
-      setClubs(filteredClubs)
-    } else {
-      setClubs([])
+    const fetchData = async () => {
+      const response = await fetch('/data/clubs.csv')
+      const reader = response.body?.getReader()
+      const result = await reader?.read()
+      const decoder = new TextDecoder('utf-8')
+      const csv = decoder.decode(result?.value)
+      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
+      const parsedData: Club[] = results.data.map((row: any, index: number) => ({
+        id: index.toString(),
+        name: row.name || '정보 없음',
+        sport: row.sport || '정보 없음',
+        members: row.members || '0',
+        meetingDay: row.meetingDay || '정보 없음',
+        location: row.location || '정보 없음',
+        disabilityFriendly: row.disabilityFriendly || 'No',
+        region: row.region || '정보 없음',
+        district: row.district || '정보 없음',
+      }))
+      setClubs(parsedData)
+
+      const regions = [...new Set(parsedData.map(item => item.region))]
+      setUniqueRegions(regions)
     }
-  }, [selectedRegion, selectedDistrict, showDisabilityFriendly])
+
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    let filtered = clubs
+
+    if (selectedRegion) {
+      filtered = filtered.filter(club => club.region === selectedRegion)
+      const districts = [...new Set(filtered.map(item => item.district))]
+      setUniqueDistricts(districts)
+    }
+
+    if (selectedDistrict) {
+      filtered = filtered.filter(club => club.district === selectedDistrict)
+    }
+
+    if (showDisabilityFriendly) {
+      filtered = filtered.filter(club => club.disabilityFriendly.toLowerCase() === 'yes')
+    }
+
+    setFilteredClubs(filtered)
+  }, [clubs, selectedRegion, selectedDistrict, showDisabilityFriendly])
 
   const handleRegionChange = (value: string) => {
-    if (value === '서울' || value === '부산') {
-      setSelectedRegion(value)
-      setSelectedDistrict('')
-    }
+    setSelectedRegion(value)
+    setSelectedDistrict('')
   }
 
   return (
@@ -105,8 +98,9 @@ export default function ClubsPage() {
             </Link>
             <nav className="hidden md:flex items-center space-x-8">
               <div className="relative group">
-                <span className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+                <span className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center">
                   지역
+                  <ChevronDown className="ml-1 h-4 w-4" />
                 </span>
                 <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
                   <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
@@ -208,8 +202,11 @@ export default function ClubsPage() {
                       <SelectValue placeholder="지역 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="서울">서울</SelectItem>
-                      <SelectItem value="부산">부산</SelectItem>
+                      {uniqueRegions.map((region) => (
+                        <SelectItem key={region} value={region}>
+                          {region}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -217,19 +214,12 @@ export default function ClubsPage() {
                   <label htmlFor="district-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
                     구
                   </label>
-                  <Select onValueChange={(value: string) => {
-                    if (
-                      (selectedRegion === '서울' && (value === '강남구' || value === '강서구')) ||
-                      (selectedRegion === '부산' && (value === '해운대구' || value === '수영구'))
-                    ) {
-                      setSelectedDistrict(value as District)
-                    }
-                  }} disabled={!selectedRegion}>
+                  <Select onValueChange={setSelectedDistrict} disabled={!selectedRegion}>
                     <SelectTrigger id="district-select" className="w-full">
                       <SelectValue placeholder="구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedRegion && Object.keys(clubsData[selectedRegion]).map((district) => (
+                      {uniqueDistricts.map((district) => (
                         <SelectItem key={district} value={district}>
                           {district}
                         </SelectItem>
@@ -246,11 +236,11 @@ export default function ClubsPage() {
                   <Label htmlFor="disability-friendly" className="text-sm text-gray-700 dark:text-gray-300">장애인 친화 동호회만 보기</Label>
                 </div>
               </div>
-              <Button className="w-full" disabled={!selectedRegion || !selectedDistrict}>
+              <Button className="w-full" disabled={!selectedRegion}>
                 <Search className="mr-2 h-4 w-4" /> 검색
               </Button>
             </motion.div>
-            {clubs.length > 0 ? (
+            {filteredClubs.length > 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -261,7 +251,7 @@ export default function ClubsPage() {
                   {showDisabilityFriendly && ' (장애인 친화)'}
                 </h2>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {clubs.map((club, index) => (
+                  {filteredClubs.map((club, index) => (
                     <motion.div
                       key={club.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -284,7 +274,7 @@ export default function ClubsPage() {
                             </p>
                             <p className="flex items-center">
                               <Accessibility className="text-blue-500 mr-2 h-4 w-4" /> 
-                              장애인 친화: {club.disabilityFriendly ? '예' : '아니오'}
+                              장애인 친화: {club.disabilityFriendly.toLowerCase() === 'yes' ? '예' : '아니오'}
                             </p>
                           </div>
                         </CardContent>
