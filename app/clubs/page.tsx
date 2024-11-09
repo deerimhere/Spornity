@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Users, MapPin, Calendar, Accessibility, Search, Menu, X, ChevronDown } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,7 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { motion } from 'framer-motion'
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { motion, AnimatePresence } from 'framer-motion'
 import Papa from 'papaparse'
 
 interface Club {
@@ -18,9 +22,11 @@ interface Club {
   members: string
   meetingDay: string
   location: string
-  disabilityFriendly: string
+  disabilityFriendly: boolean
   region: string
   district: string
+  disabilityType?: string
+  introduction?: string
 }
 
 export default function ClubsPage() {
@@ -28,33 +34,56 @@ export default function ClubsPage() {
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([])
   const [selectedRegion, setSelectedRegion] = useState('')
   const [selectedDistrict, setSelectedDistrict] = useState('')
-  const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
+  // const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [uniqueRegions, setUniqueRegions] = useState<string[]>([])
   const [uniqueDistricts, setUniqueDistricts] = useState<string[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeTab, setActiveTab] = useState("all")
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch('/data/clubs.csv')
-      const reader = response.body?.getReader()
-      const result = await reader?.read()
-      const decoder = new TextDecoder('utf-8')
-      const csv = decoder.decode(result?.value)
-      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
-      const parsedData: Club[] = results.data.map((row: any, index: number) => ({
-        id: index.toString(),
-        name: row.name || '정보 없음',
-        sport: row.sport || '정보 없음',
-        members: row.members || '0',
-        meetingDay: row.meetingDay || '정보 없음',
-        location: row.location || '정보 없음',
-        disabilityFriendly: row.disabilityFriendly || 'No',
-        region: row.region || '정보 없음',
-        district: row.district || '정보 없음',
-      }))
-      setClubs(parsedData)
+      const [generalResponse, disabilityResponse] = await Promise.all([
+        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%A7%80%EC%97%AD%EB%B3%84%20%EC%8A%A4%ED%8F%AC%EC%B8%A0%20%EB%8F%99%ED%98%B8%ED%9A%8C%20%ED%98%84%ED%99%A9%20%EC%9D%BC%EB%B6%80-jFaPgzcX9oqqbrqukhFL9wH9SmRSkR.csv'),
+        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%9E%A5%EC%95%A0%EC%9D%B8%EC%83%9D%ED%99%9C%EC%B2%B4%EC%9C%A1%EB%8F%99%ED%98%B8%EC%9D%B8%EB%8F%99%ED%98%B8%ED%9A%8C%EC%A1%B0%ED%9A%8C%EC%A0%95%EB%B3%B4-l7nsdy7qH7WqBXvyfWRxbtvqcGzOqm.csv')
+      ])
 
-      const regions = [...new Set(parsedData.map(item => item.region))]
+      const generalCsv = await generalResponse.text()
+      const disabilityCsv = await disabilityResponse.text()
+
+      const generalResults = Papa.parse(generalCsv, { header: true, skipEmptyLines: true })
+      const disabilityResults = Papa.parse(disabilityCsv, { header: true, skipEmptyLines: true })
+
+      const generalClubs: Club[] = generalResults.data.map((row: any, index: number) => ({
+        id: `general-${index}`,
+        name: row['동호회명'] || '정보 없음',
+        sport: row['종목명'] || '정보 없음',
+        members: row['회원수'] || '0',
+        meetingDay: '정보 없음',
+        location: row['시군구명'] || '정보 없음',
+        disabilityFriendly: false,
+        region: row['시도명'] || '정보 없음',
+        district: row['시군구명']?.replace(row['시도명'], '').trim() || '정보 없음',
+      }))
+
+      const disabilityClubs: Club[] = disabilityResults.data.map((row: any, index: number) => ({
+        id: `disability-${index}`,
+        name: row['동호회명'] || '정보 없음',
+        sport: row['종목명'] || '정보 없음',
+        members: '정보 없음',
+        meetingDay: row['운영시간내용'] || '정보 없음',
+        location: row['시군구명'] || '정보 없음',
+        disabilityFriendly: true,
+        region: row['시도명'] || '정보 없음',
+        district: row['시군구명']?.replace(row['시도명'], '').trim() || '정보 없음',
+        disabilityType: row['장애유형명'] || '정보 없음',
+        introduction: row['동호회 소개내용'] || '정보 없음',
+      }))
+
+      const allClubs = [...generalClubs, ...disabilityClubs]
+      setClubs(allClubs)
+
+      const regions = [...new Set(allClubs.map(item => item.region))]
       setUniqueRegions(regions)
     }
 
@@ -74,12 +103,25 @@ export default function ClubsPage() {
       filtered = filtered.filter(club => club.district === selectedDistrict)
     }
 
-    if (showDisabilityFriendly) {
-      filtered = filtered.filter(club => club.disabilityFriendly.toLowerCase() === 'yes')
+    // if (showDisabilityFriendly) {
+    //   filtered = filtered.filter(club => club.disabilityFriendly)
+    // }
+
+    if (searchTerm) {
+      filtered = filtered.filter(club => 
+        club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        club.sport.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    if (activeTab === "disability") {
+      filtered = filtered.filter(club => club.disabilityFriendly)
+    } else if (activeTab === "general") {
+      filtered = filtered.filter(club => !club.disabilityFriendly)
     }
 
     setFilteredClubs(filtered)
-  }, [clubs, selectedRegion, selectedDistrict, showDisabilityFriendly])
+  }, [clubs, selectedRegion, selectedDistrict, searchTerm, activeTab])
 
   const handleRegionChange = (value: string) => {
     setSelectedRegion(value)
@@ -87,12 +129,12 @@ export default function ClubsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="font-bold text-2xl bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">
+              <span className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Spornity
               </span>
             </Link>
@@ -176,29 +218,32 @@ export default function ClubsPage() {
       )}
 
       <main className="flex-1">
-        <section className="py-20 md:py-32">
-          <div className="container mx-auto px-4">
-            <motion.h1 
-              className="text-4xl md:text-6xl font-bold mb-8 text-center text-gray-800 dark:text-gray-200"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              지역 동호회 검색
-            </motion.h1>
-            <motion.div 
-              className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-12"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <div className="grid gap-6 md:grid-cols-3 mb-6">
-                <div>
-                  <label htmlFor="region-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
-                    지역
-                  </label>
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                  지역 동호회 검색
+                </h1>
+                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                  당신의 관심사와 지역에 맞는 동호회를 찾아보세요.<br />
+                  새로운 취미와 친구들이 기다리고 있습니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">검색 필터</h2>
+                  <p className="text-gray-500 dark:text-gray-400">원하는 조건을 선택하여 동호회를 찾아보세요.</p>
+                </div>
+                <div className="space-y-4">
                   <Select onValueChange={handleRegionChange}>
-                    <SelectTrigger id="region-select" className="w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="지역 선택" />
                     </SelectTrigger>
                     <SelectContent>
@@ -209,13 +254,8 @@ export default function ClubsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <label htmlFor="district-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
-                    구
-                  </label>
                   <Select onValueChange={setSelectedDistrict} disabled={!selectedRegion}>
-                    <SelectTrigger id="district-select" className="w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="구 선택" />
                     </SelectTrigger>
                     <SelectContent>
@@ -226,78 +266,61 @@ export default function ClubsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="disability-friendly"
-                    checked={showDisabilityFriendly}
-                    onCheckedChange={setShowDisabilityFriendly}
+                  {/* <div className="flex items-center space-x-2">
+                    <Switch
+                      id="disability-friendly"
+                      checked={showDisabilityFriendly}
+                      onCheckedChange={setShowDisabilityFriendly}
+                    />
+                    <Label htmlFor="disability-friendly">장애인 동호회만 보기</Label>
+                  </div> */}
+                  <Input
+                    placeholder="동호회 또는 종목 검색"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <Label htmlFor="disability-friendly" className="text-sm text-gray-700 dark:text-gray-300">장애인 친화 동호회만 보기</Label>
                 </div>
               </div>
-              <Button className="w-full" disabled={!selectedRegion}>
-                <Search className="mr-2 h-4 w-4" /> 검색
-              </Button>
-            </motion.div>
-            {filteredClubs.length > 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-200">
-                  {selectedRegion} {selectedDistrict}의 동호회
-                  {showDisabilityFriendly && ' (장애인 친화)'}
-                </h2>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredClubs.map((club, index) => (
-                    <motion.div
-                      key={club.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                    >
-                      <Card className="h-full hover:shadow-lg transition-shadow duration-300">
-                        <CardContent className="p-6">
-                          <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">{club.name}</h3>
-                          <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-4">{club.sport}</p>
-                          <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                            <p className="flex items-center">
-                              <Users className="text-blue-500 mr-2 h-4 w-4" /> 회원 수: {club.members}명
-                            </p>
-                            <p className="flex items-center">
-                              <Calendar className="text-blue-500 mr-2 h-4 w-4" /> 모임 일정: {club.meetingDay}
-                            </p>
-                            <p className="flex items-center">
-                              <MapPin className="text-blue-500 mr-2 h-4 w-4" /> 위치: {club.location}
-                            </p>
-                            <p className="flex items-center">
-                              <Accessibility className="text-blue-500 mr-2 h-4 w-4" /> 
-                              장애인 친화: {club.disabilityFriendly.toLowerCase() === 'yes' ? '예' : '아니오'}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            ) : (
-              <div className="text-center py-12">
-                <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-xl text-gray-600 dark:text-gray-400">지역과 구를 선택하여 동호회를 검색해보세요.</p>
+              <div className="space-y-4">
+                <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="all">전체</TabsTrigger>
+                    <TabsTrigger value="general">일반인 동호회</TabsTrigger>
+                    <TabsTrigger value="disability">장애인 동호회</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="all">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredClubs.map((club) => (
+                        <ClubCard key={club.id} club={club} />
+                      ))}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="general">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredClubs.filter(club => !club.disabilityFriendly).map((club) => (
+                        <ClubCard key={club.id} club={club} />
+                      ))}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="disability">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredClubs.filter(club => club.disabilityFriendly).map((club) => (
+                        <ClubCard key={club.id} club={club} />
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
-            )}
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="container mx-auto py-12 px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
+              <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
             </div>
             <div>
@@ -305,7 +328,7 @@ export default function ClubsPage() {
               <ul className="space-y-2">
                 <li><Link href="/facilities" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 체육 시설</Link></li>
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
-                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">체력 진단</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
                 <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
               </ul>
             </div>
@@ -320,11 +343,100 @@ export default function ClubsPage() {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
             <p className="text-center text-gray-600 dark:text-gray-400">
-              © 2024 <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</span>. All rights reserved.
+              © 2024 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</span>. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
     </div>
+  )
+}
+
+function ClubCard({ club }: { club: Club }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+        >
+          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+            {club.name}
+          </h3>
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-gray-600 dark:text-gray-400">{club.sport}</p>
+            <Badge variant="outline" className="bg-white text-black">
+              {club.disabilityFriendly ? '장애인 동호회' : '일반인 동호회'}
+            </Badge>
+          </div>
+          <div className="mt-4 space-y-2 text-sm">
+            {!club.disabilityFriendly && (
+              <p className="flex items-center text-gray-500">
+                <Users className="w-4 h-4 mr-2" />
+                회원 수: {club.members}명
+              </p>
+            )}
+            <p className="flex items-center text-gray-500">
+              <Calendar className="w-4 h-4 mr-2" />
+              모임 일정: {club.meetingDay}
+            </p>
+            <p className="flex items-center text-gray-500">
+              <MapPin className="w-4 h-4 mr-2" />
+              위치: {club.location}
+            </p>
+          </div>
+        </motion.div>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">{club.name}</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">종목</h4>
+            <p className="text-lg">{club.sport}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">회원 수</h4>
+            <p className="text-lg">{club.members}명</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">모임 일정</h4>
+            <p className="text-lg">{club.meetingDay}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">위치</h4>
+            <p className="text-lg">{club.location}</p>
+          </div>
+        </div>
+        {club.disabilityFriendly && (
+          <div>
+            <h4 className="font-bold text-lg mb-2">장애인 친화 정보</h4>
+            {club.disabilityType && (
+              <p className="text-gray-600 dark:text-gray-400">
+                <span className="font-semibold">장애유형:</span> {club.disabilityType}
+              </p>
+            )}
+          </div>
+        )}
+        {club.introduction && (
+          <div>
+            <h4 className="font-bold text-lg mb-2">동호회 소개</h4>
+            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
+              {club.introduction}
+            </p>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Badge variant="outline" className="bg-white text-black">
+            {club.disabilityFriendly ? '장애인 동호회' : '일반인 동호회'}
+          </Badge>
+          <Badge variant="secondary">{club.sport}</Badge>
+          <Badge variant="secondary">{club.region}</Badge>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
