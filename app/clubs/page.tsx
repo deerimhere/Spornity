@@ -44,8 +44,8 @@ export default function ClubsPage() {
   useEffect(() => {
     const fetchData = async () => {
       const [generalResponse, disabilityResponse] = await Promise.all([
-        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%A7%80%EC%97%AD%EB%B3%84%20%EC%8A%A4%ED%8F%AC%EC%B8%A0%20%EB%8F%99%ED%98%B8%ED%9A%8C%20%ED%98%84%ED%99%A9%20%EC%9D%BC%EB%B6%80-jFaPgzcX9oqqbrqukhFL9wH9SmRSkR.csv'),
-        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%9E%A5%EC%95%A0%EC%9D%B8%EC%83%9D%ED%99%9C%EC%B2%B4%EC%9C%A1%EB%8F%99%ED%98%B8%EC%9D%B8%EB%8F%99%ED%98%B8%ED%9A%8C%EC%A1%B0%ED%9A%8C%EC%A0%95%EB%B3%B4-l7nsdy7qH7WqBXvyfWRxbtvqcGzOqm.csv')
+        fetch('https://6h5alijc0u68azqc.public.blob.vercel-storage.com/sports-club-AWSvp3IJc81SAs4FXNzx2shavv6TQF.csv'),
+        fetch('https://6h5alijc0u68azqc.public.blob.vercel-storage.com/disabled-sports-club-9v4Nt2enJ2pXDjpOBwo7gJGWIX3nxD.csv')
       ])
 
       const generalCsv = await generalResponse.text()
