@@ -1,176 +1,192 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Activity, Phone, Calendar, Clock, Globe, Users, Accessibility, Search, ChevronDown, Menu, X } from "lucide-react"
+import { Activity, Phone, Calendar, Clock, Globe, Users, Search, ChevronDown, Menu, X, MapPin } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { motion, AnimatePresence } from "framer-motion"
+import Papa from 'papaparse'
 
 type Program = {
   id: number;
-  name: string;
-  facility: string;
+  facilityName: string;
+  facilityType: string;
+  region: string;
+  city: string;
   address: string;
   phone: string;
+  programName: string;
+  targetAudience: string;
   startDate: string;
   endDate: string;
   days: string;
   time: string;
+  capacity: string;
+  price: string;
+  priceType: string | null;
   website: string;
-  ageGroup: string;
-  disabilityFriendly: boolean;
-}
-
-type ProgramsData = {
-  [region: string]: {
-    [sport: string]: Program[];
-  };
-}
-
-const programsData: ProgramsData = {
-  서울: {
-    수영: [
-      {
-        id: 1,
-        name: '아침 수영 교실',
-        facility: '강남 스포츠 센터',
-        address: '서울시 강남구 테헤란로 123',
-        phone: '02-1234-5678',
-        startDate: '2024-03-01',
-        endDate: '2024-05-31',
-        days: '월, 수, 금',
-        time: '06:00 - 07:30',
-        website: 'http://www.gangnamsports.com',
-        ageGroup: '성인',
-        disabilityFriendly: true
-      },
-      {
-        id: 2,
-        name: '주말 가족 수영',
-        facility: '송파 올림픽 수영장',
-        address: '서울시 송파구 올림픽로 300',
-        phone: '02-2345-6789',
-        startDate: '2024-04-01',
-        endDate: '2024-06-30',
-        days: '토, 일',
-        time: '10:00 - 12:00',
-        website: 'http://www.songpapool.com',
-        ageGroup: '전연령',
-        disabilityFriendly: false
-      },
-    ],
-    농구: [
-      {
-        id: 3,
-        name: '청소년 농구 교실',
-        facility: '마포 체육관',
-        address: '서울시 마포구 월드컵로 234',
-        phone: '02-3456-7890',
-        startDate: '2024-03-15',
-        endDate: '2024-06-15',
-        days: '화, 목',
-        time: '17:00 - 19:00',
-        website: 'http://www.maposports.com',
-        ageGroup: '청소년',
-        disabilityFriendly: true
-      },
-      {
-        id: 4,
-        name: '휠체어 농구 클래스',
-        facility: '강동 농구센터',
-        address: '서울시 강동구 천호대로 567',
-        phone: '02-4567-8901',
-        startDate: '2024-04-01',
-        endDate: '2024-08-31',
-        days: '월, 수',
-        time: '20:00 - 22:00',
-        website: 'http://www.gangdongbasketball.com',
-        ageGroup: '성인',
-        disabilityFriendly: true
-      },
-    ],
-  },
-  부산: {
-    요가: [
-      {
-        id: 5,
-        name: '해변 요가',
-        facility: '해운대 비치 요가 센터',
-        address: '부산시 해운대구 해운대해변로 123',
-        phone: '051-1234-5678',
-        startDate: '2024-05-01',
-        endDate: '2024-08-31',
-        days: '월, 수, 금',
-        time: '07:00 - 08:30',
-        website: 'http://www.haeundaeyoga.com',
-        ageGroup: '성인',
-        disabilityFriendly: false
-      },
-      {
-        id: 6,
-        name: '적응형 요가',
-        facility: '부산 웰니스 센터',
-        address: '부산시 부산진구 복지로 456',
-        phone: '051-2345-6789',
-        startDate: '2024-03-01',
-        endDate: '2024-05-31',
-        days: '화, 목',
-        time: '14:00 - 15:30',
-        website: 'http://www.busanwellness.com',
-        ageGroup: '전연령',
-        disabilityFriendly: true
-      },
-    ],
-  },
+  isDisabilityProgram: boolean;
+  sportName?: string;
+  subSportName?: string;
+  disabilityType?: string;
+  programIntroduction?: string;
+  recruitmentStartDate?: string;
+  recruitmentEndDate?: string;
 }
 
 export default function PublicProgramsPage() {
-  const [selectedRegion, setSelectedRegion] = useState('')
-  const [selectedSport, setSelectedSport] = useState('')
-  const [selectedAgeGroup, setSelectedAgeGroup] = useState('all')
-  const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
   const [programs, setPrograms] = useState<Program[]>([])
+  const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([])
+  const [selectedRegion, setSelectedRegion] = useState('')
+  const [selectedCity, setSelectedCity] = useState('')
+  const [selectedTargetAudience, setSelectedTargetAudience] = useState('all')
+  const [selectedDisabilityType, setSelectedDisabilityType] = useState('all')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [uniqueRegions, setUniqueRegions] = useState<string[]>([])
+  const [uniqueCities, setUniqueCities] = useState<string[]>([])
+  const [uniqueDisabilityTypes, setUniqueDisabilityTypes] = useState<string[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeTab, setActiveTab] = useState("all")
 
   useEffect(() => {
-    if (selectedRegion && selectedSport) {
-      let filteredPrograms = programsData[selectedRegion]?.[selectedSport] || []
-      if (selectedAgeGroup !== 'all') {
-        filteredPrograms = filteredPrograms.filter(
-          program => selectedAgeGroup === '전연령' || program.ageGroup === selectedAgeGroup
-        )
-      }
-      if (showDisabilityFriendly) {
-        filteredPrograms = filteredPrograms.filter(program => program.disabilityFriendly)
-      }
-      setPrograms(filteredPrograms)
-    } else {
-      setPrograms([])
+    const fetchData = async () => {
+      const [regularResponse, disabilityResponse] = await Promise.all([
+        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EA%B3%B5%EA%B3%B5%EC%B2%B4%EC%9C%A1%EC%8B%9C%EC%84%A4%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8%EC%A0%95%EB%B3%B4%20%EC%9D%BC%EB%B6%80-clNcR9aFyNirMJ7ZBgTPl3YUiD40Zr.csv'),
+        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%9E%A5%EC%95%A0%EC%9D%B8%EC%83%9D%ED%99%9C%EC%B2%B4%EC%9C%A1%EA%B5%90%EC%8B%A4%EB%8D%B0%EC%9D%B4%ED%84%B0-TyyuLqpjrVLBEcQ8zhbWjwPAQNr2wT.csv')
+      ])
+
+      const regularReader = regularResponse.body?.getReader()
+      const disabilityReader = disabilityResponse.body?.getReader()
+
+      const [regularResult, disabilityResult] = await Promise.all([
+        regularReader?.read(),
+        disabilityReader?.read()
+      ])
+
+      const decoder = new TextDecoder('utf-8')
+      const regularCsv = decoder.decode(regularResult?.value)
+      const disabilityCsv = decoder.decode(disabilityResult?.value)
+
+      const regularResults = Papa.parse(regularCsv, { header: true, skipEmptyLines: true })
+      const disabilityResults = Papa.parse(disabilityCsv, { header: true, skipEmptyLines: true })
+
+      const regularPrograms: Program[] = regularResults.data.map((row: any, index: number) => ({
+        id: index,
+        facilityName: row['시설명'] || '정보 없음',
+        facilityType: row['시설유형명'] || '정보 없음',
+        region: row['시도명'] || '정보 없음',
+        city: row['시군구명'] || '정보 없음',
+        address: row['시설주소'] || '정보 없음',
+        phone: row['시설전화번호'] || '정보 없음',
+        programName: row['프로그램 명'] || '정보 없음',
+        targetAudience: row['프로그램 대상명'] || '정보 없음',
+        startDate: row['프로그램 시작일자'] || '정보 없음',
+        endDate: row['프로그램 종료일자'] || '정보 없음',
+        days: row['프로그램 개설 요일명'] || '정보 없음',
+        time: row['프로그램 개설 시간대값'] || '정보 없음',
+        capacity: row['프로그램 모집인원수'] || '0',
+        price: row['프로그램 가격'] || '정보 없음',
+        priceType: row['프로그램 가격 유형명'] || null,
+        website: row['홈페이지 유형명'] || '정보 없음',
+        isDisabilityProgram: false,
+      }))
+
+      const disabilityPrograms: Program[] = disabilityResults.data.map((row: any, index: number) => ({
+        id: regularPrograms.length + index,
+        facilityName: '정보 없음',
+        facilityType: '장애인 생활체육교실',
+        region: row['시도명'] || '정보 없음',
+        city: row['시군구명'] || '정보 없음',
+        address: '정보 없음',
+        phone: '정보 없음',
+        programName: row['프로그램명'] || '정보 없음',
+        targetAudience: '장애인',
+        startDate: row['운영시작일'] || '정보 없음',
+        endDate: row['운영종료일'] || '정보 없음',
+        days: row['운영시간']?.split(' ')[0] || '정보 없음',
+        time: row['운영시간']?.split(' ')[1] || '정보 없음',
+        capacity: '정보 없음',
+        price: '정보 없음',
+        priceType: null,
+        website: '정보 없음',
+        isDisabilityProgram: true,
+        sportName: row['종목명'] || '정보 없음',
+        subSportName: row['부종목명'] || '정보 없음',
+        disabilityType: row['장애유형명'] || '정보 없음',
+        programIntroduction: row['프로그램소개내용'] || '정보 없음',
+        recruitmentStartDate: row['모집시작일'] || '정보 없음',
+        recruitmentEndDate: row['모집종료일'] || '정보 없음',
+      }))
+
+      const allPrograms = [...regularPrograms, ...disabilityPrograms]
+      setPrograms(allPrograms)
+
+      const regions = [...new Set(allPrograms.map(item => item.region))]
+      setUniqueRegions(regions)
+
+      const disabilityTypes = [...new Set(disabilityPrograms.map(item => item.disabilityType))]
+      setUniqueDisabilityTypes(disabilityTypes)
     }
-  }, [selectedRegion, selectedSport, selectedAgeGroup, showDisabilityFriendly])
+
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    let filtered = programs
+
+    if (selectedRegion) {
+      filtered = filtered.filter(program => program.region === selectedRegion)
+      const cities = [...new Set(filtered.map(item => item.city))]
+      setUniqueCities(cities)
+    }
+
+    if (selectedCity) {
+      filtered = filtered.filter(program => program.city === selectedCity)
+    }
+
+    if (selectedTargetAudience !== 'all') {
+      filtered = filtered.filter(program => program.targetAudience.includes(selectedTargetAudience))
+    }
+
+    if (selectedDisabilityType !== 'all') {
+      filtered = filtered.filter(program => program.disabilityType === selectedDisabilityType)
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(program => 
+        program.programName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        program.facilityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (program.sportName && program.sportName.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    }
+
+    if (activeTab === "disability") {
+      filtered = filtered.filter(program => program.isDisabilityProgram)
+    } else if (activeTab === "regular") {
+      filtered = filtered.filter(program => !program.isDisabilityProgram)
+    }
+
+    setFilteredPrograms(filtered)
+  }, [programs, selectedRegion, selectedCity, selectedTargetAudience, selectedDisabilityType, searchTerm, activeTab])
 
   const handleRegionChange = (value: string) => {
     setSelectedRegion(value)
-    setSelectedSport('')
-    setSelectedAgeGroup('all')
-  }
-
-  const handleSportChange = (value: string) => {
-    setSelectedSport(value)
-    setSelectedAgeGroup('all')
+    setSelectedCity('')
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="font-bold text-2xl bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">
+              <span className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Spornity
               </span>
             </Link>
@@ -254,164 +270,127 @@ export default function PublicProgramsPage() {
       )}
 
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="container px-4 md:px-6">
-            <motion.h1 
-              className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none mb-8 text-center text-gray-800 dark:text-gray-200"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              공공체육시설 프로그램 검색
-            </motion.h1>
-            <motion.div 
-              className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-12"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <div className="grid gap-6 md:grid-cols-3 mb-6">
-                <div>
-                  <label htmlFor="region-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
-                    지역
-                  </label>
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                  공공체육시설 프로그램 검색
+                </h1>
+                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                  당신의 건강한 삶을 위한 다양한 프로그램을 찾아보세요.<br />
+                  지역별, 종목별로 원하는 프로그램을 쉽게 검색할 수 있습니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">검색 필터</h2>
+                  <p className="text-gray-500 dark:text-gray-400">원하는 조건을 선택하여 프로그램을 찾아보세요.</p>
+                </div>
+                <div className="space-y-4">
                   <Select onValueChange={handleRegionChange}>
-                    <SelectTrigger id="region-select" className="w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="지역 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="서울">서울</SelectItem>
-                      <SelectItem value="부산">부산</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label htmlFor="sport-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
-                    운동 종류
-                  </label>
-                  <Select onValueChange={handleSportChange} disabled={!selectedRegion}>
-                    <SelectTrigger id="sport-select" className="w-full">
-                      <SelectValue placeholder="운동 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedRegion && Object.keys(programsData[selectedRegion]).map((sport) => (
-                        <SelectItem key={sport} value={sport}>
-                          {sport}
+                      {uniqueRegions.map((region) => (
+                        <SelectItem key={region} value={region}>
+                          {region}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <label htmlFor="age-group-select" className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
-                    대상 연령대
-                  </label>
-                  <Select onValueChange={setSelectedAgeGroup} disabled={!selectedSport}>
-                    <SelectTrigger id="age-group-select" className="w-full">
-                      <SelectValue placeholder="연령대 선택" />
+                  <Select onValueChange={setSelectedCity} disabled={!selectedRegion}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="시/군/구 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {uniqueCities.map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={setSelectedTargetAudience}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="대상 선택" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">전체</SelectItem>
-                      <SelectItem value="전연령">전연령</SelectItem>
                       <SelectItem value="성인">성인</SelectItem>
                       <SelectItem value="청소년">청소년</SelectItem>
-                      <SelectItem value="유아">유아</SelectItem>
+                      <SelectItem value="어린이">어린이</SelectItem>
+                      <SelectItem value="노인">노인</SelectItem>
+                      <SelectItem value="장애인">장애인</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select onValueChange={setSelectedDisabilityType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="장애 유형 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      {uniqueDisabilityTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder="프로그램 또는 시설 검색"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
               </div>
-              <div className="flex items-center space-x-2 mb-6">
-                <Switch
-                  id="disability-friendly"
-                  checked={showDisabilityFriendly}
-                  onCheckedChange={setShowDisabilityFriendly}
-                />
-                <Label htmlFor="disability-friendly" className="text-sm text-gray-700 dark:text-gray-300">장애인 친화 프로그램만 보기</Label>
+              <div className="space-y-4">
+                <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="all">전체</TabsTrigger>
+                    <TabsTrigger value="regular">일반 프로그램</TabsTrigger>
+                    <TabsTrigger value="disability">장애인 프로그램</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="all">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredPrograms.map((program) => (
+                        <ProgramCard key={program.id} program={program} />
+                      ))}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="regular">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredPrograms.filter(program => !program.isDisabilityProgram).map((program) => (
+                        <ProgramCard key={program.id} program={program} />
+                      ))}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="disability">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredPrograms.filter(program => program.isDisabilityProgram).map((program) => (
+                        <ProgramCard key={program.id} program={program} />
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
-              <Button className="w-full" disabled={!selectedRegion || !selectedSport}>
-                <Search className="mr-2 h-4 w-4" /> 검색
-              </Button>
-            </motion.div>
-            <AnimatePresence>
-              {programs.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-200">
-                    {selectedRegion}의 {selectedSport} 프로그램
-                    {selectedAgeGroup !== 'all' && ` (${selectedAgeGroup})`}
-                    {showDisabilityFriendly && ' - 장애인 친화'}
-                  </h2>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {programs.map((program, index) => (
-                      <motion.div
-                        key={program.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                      >
-                        <Card className="h-full hover:shadow-lg transition-shadow duration-300">
-                          <CardHeader>
-                            <CardTitle className="flex items-center">
-                              <Activity className="mr-2 h-4 w-4" /> {program.name}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="font-semibold mb-2">{program.facility}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{program.address}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center">
-                              <Phone className="mr-2 h-4 w-4" /> {program.phone}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center">
-                              <Calendar className="mr-2 h-4 w-4" /> {program.startDate} ~ {program.endDate}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center">
-                              <Clock className="mr-2 h-4 w-4" /> {program.days} {program.time}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center">
-                              <Users className="mr-2 h-4 w-4" /> 대상: {program.ageGroup}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center">
-                              <Accessibility className="mr-2 h-4 w-4" /> 
-                              장애인 친화: {program.disabilityFriendly ? '예' : '아니오'}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                              <Globe className="mr-2 h-4 w-4" /> 
-                              <a href={program.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                홈페이지 방문
-                              </a>
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-center py-12"
-                >
-                  <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-xl text-gray-600 dark:text-gray-400">지역과 운동 종류를 선택하여 프로그램을 검색해보세요.</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="container mx-auto py-12 px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
+              <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
             </div>
             <div>
@@ -434,11 +413,146 @@ export default function PublicProgramsPage() {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
             <p className="text-center text-gray-600 dark:text-gray-400">
-              © 2024 <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Spornity</span>. All rights reserved.
+              © 2024 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</span>. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
     </div>
+  )
+}
+
+function ProgramCard({ program }: { program: Program }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+        >
+          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+            {program.programName}
+          </h3>
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-gray-600 dark:text-gray-400">{program.facilityName}</p>
+            <Badge variant="outline" className="bg-white text-black whitespace-nowrap">
+              {program.isDisabilityProgram ? '장애인 대상' : '일반인 대상'}
+            </Badge>
+          </div>
+          <div className="mt-4 space-y-2 text-sm">
+            <p className="flex items-center text-gray-500">
+              <Activity className="w-4 h-4 mr-2" />
+              {program.isDisabilityProgram ? program.sportName : program.targetAudience}
+            </p>
+            <p className="flex items-center text-gray-500">
+              <MapPin className="w-4 h-4 mr-2" />
+              {program.region} {program.city}
+            </p>
+          </div>
+        </motion.div>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">{program.programName}</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-4">
+          {program.isDisabilityProgram ? (
+            <>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">종목</h4>
+                <p className="text-lg">{program.sportName}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">부종목</h4>
+                <p className="text-lg">{program.subSportName}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">장애 유형</h4>
+                <p className="text-lg">{program.disabilityType}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">대상</h4>
+                <p className="text-lg">{program.targetAudience}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">시설명</h4>
+                <p className="text-lg">{program.facilityName}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">시설 유형</h4>
+                <p className="text-lg">{program.facilityType}</p>
+              </div>
+            </>
+          )}
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">지역</h4>
+            <p className="text-lg">{program.region} {program.city}</p>
+          </div>
+          {!program.isDisabilityProgram && (
+            <>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">주소</h4>
+                <p className="text-lg">{program.address}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">전화번호</h4>
+                <p className="text-lg">{program.phone}</p>
+              </div>
+            </>
+          )}
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">기간</h4>
+            <p className="text-lg">{program.startDate} ~ {program.endDate}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">요일 및 시간</h4>
+            <p className="text-lg">{program.days} {program.time}</p>
+          </div>
+          {program.isDisabilityProgram ? (
+            <>
+              <div className="col-span-2">
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">프로그램 소개</h4>
+                <p className="text-lg">{program.programIntroduction}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">모집 기간</h4>
+                <p className="text-lg">{program.recruitmentStartDate} ~ {program.recruitmentEndDate}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">모집 인원</h4>
+                <p className="text-lg">{program.capacity}명</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-500 mb-1">가격</h4>
+                <p className="text-lg">{program.price}원</p>
+              </div>
+            </>
+          )}
+        </div>
+        {!program.isDisabilityProgram && (
+          <div className="mt-4">
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">홈페이지</h4>
+            <a href={program.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              {program.website}
+            </a>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Badge variant="secondary">{program.region}</Badge>
+          <Badge variant="secondary">{program.city}</Badge>
+          {program.isDisabilityProgram && (
+            <Badge variant="secondary">{program.disabilityType}</Badge>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
