@@ -18,67 +18,71 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { motion, AnimatePresence } from "framer-motion"
-import Papa from 'papaparse'
 import { format, isAfter, isBefore, parseISO } from 'date-fns'
+import preprocessedData from '../../public/data/preprocessed_soma_data.json'
 
 interface Collection {
-  서적명: string
-  작가명: string
-  출판사명: string
-  발행년도: string
+  id: string;
+  서적명: string;
+  작가명: string;
+  출판사명: string;
+  발행년도: string;
 }
 
 interface EducationProgram {
-  교육종류명: string
-  교육명: string
-  교육대상명: string
-  정원: string
-  교육시작일자: number
-  교육종료일자: number
-  교육장소명: string
-  교육비용: string
-  "교육 설명내용": string
-  상세설명내용: string
-  신청인원수: string
-  접수상태: string
-  url: string
-  접수기간: string
-  운영기간: string
-  교육대상전처리: string
+  id: string;
+  교육종류명: string;
+  교육명: string;
+  교육대상명: string;
+  정원: string;
+  교육시작일자: string;
+  교육종료일자: string;
+  교육장소명: string;
+  교육비용: string;
+  "교육 설명내용": string;
+  상세설명내용: string;
+  신청인원수: string;
+  접수상태: string;
+  url: string;
+  접수기간: string;
+  운영기간: string;
+  교육대상전처리: string;
 }
 
 interface Exhibition {
-  전시실명: string
-  전시명: string
-  전시시작일자: string
-  전시종료일자: string
-  전시상태: string
-  장소명: string
-  주관기관명: string
-  작가명: string
-  작품명: string
-  관람시간: string
-  관람정보: string
-  전자책URL: string
-  전자책명: string
-  전시이미지URL: string
-  전시이미지명: string
-  전시영문명: string
-  전시영문내용: string
+  id: string;
+  전시실명: string;
+  전시명: string;
+  전시시작일자: string;
+  전시종료일자: string;
+  전시상태: string;
+  장소명: string;
+  주관기관명: string;
+  작가명: string;
+  작품명: string;
+  관람시간: string;
+  관람정보: string;
+  전자책URL: string;
+  전자책명: string;
+  전시이미지URL: string;
+  전시이미지명: string;
+  전시영문명: string;
+  전시영문내용: string;
+  status: string;
 }
 
 interface Filters {
-  교육종류: string
-  교육대상: string
-  접수상태: string
+  교육종류: string;
+  교육대상: string;
+  접수상태: string;
 }
 
 export default function SomaMuseumPage() {
   const [activeTab, setActiveTab] = useState("exhibition")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [collections, setCollections] = useState<Collection[]>([])
-  const [educationPrograms, setEducationPrograms] = useState<EducationProgram[]>([])
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>([])
+  const [collections, setCollections] = useState<Collection[]>(preprocessedData.collections)
+  const [educationPrograms, setEducationPrograms] = useState<EducationProgram[]>(preprocessedData.educationPrograms)
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>(preprocessedData.exhibitions)
   const [searchTerm, setSearchTerm] = useState("")
   const [exhibitionSearchTerm, setExhibitionSearchTerm] = useState("")
   const [filters, setFilters] = useState<Filters>({
@@ -87,55 +91,7 @@ export default function SomaMuseumPage() {
     접수상태: "전체"
   })
 
-  const filterOptions = useMemo(() => {
-    if (!educationPrograms.length) return {
-      교육종류: ["전체"],
-      교육대상: ["전체"],
-      접수상태: ["전체"]
-    }
-
-    return {
-      교육종류: ["전체", ...new Set(educationPrograms.map(p => p.교육종류명))],
-      교육대상: ["전체", ...new Set(educationPrograms.map(p => p.교육대상전처리))],
-      접수상태: ["전체", ...new Set(educationPrograms.map(p => p.접수상태))]
-    }
-  }, [educationPrograms])
-
-  useEffect(() => {
-    const fetchCollections = async () => {
-      const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%86%8C%EB%A7%88%EB%AF%B8%EC%88%A0%EA%B4%80%EC%86%8C%EC%9E%A5%EC%9E%90%EB%A3%8C%EB%8D%B0%EC%9D%B4%ED%84%B0-F6rUYHFoBpmkm21C8mruFJAa2MuQCE.csv')
-      const reader = response.body?.getReader()
-      const result = await reader?.read()
-      const decoder = new TextDecoder('utf-8')
-      const csv = decoder.decode(result?.value)
-      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
-      setCollections(results.data as Collection[])
-    }
-
-    const fetchEducationPrograms = async () => {
-      const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/soma-education-programs-IDK7p4nbtxIQrjTy44gK9nNVjECCJh.csv')
-      const reader = response.body?.getReader()
-      const result = await reader?.read()
-      const decoder = new TextDecoder('utf-8')
-      const csv = decoder.decode(result?.value)
-      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
-      setEducationPrograms(results.data as EducationProgram[])
-    }
-
-    const fetchExhibitions = async () => {
-      const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/soma-exhibitions-mnnIYBHb0CO1JNJCk2m3dQC10869x2.csv')
-      const reader = response.body?.getReader()
-      const result = await reader?.read()
-      const decoder = new TextDecoder('utf-8')
-      const csv = decoder.decode(result?.value)
-      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
-      setExhibitions(results.data as Exhibition[])
-    }
-
-    fetchCollections()
-    fetchEducationPrograms()
-    fetchExhibitions()
-  }, [])
+  const filterOptions = useMemo(() => preprocessedData.filterOptions, [])
 
   const filteredCollections = collections.filter(collection =>
     Object.values(collection).some(value =>
@@ -162,16 +118,7 @@ export default function SomaMuseumPage() {
   }, [educationPrograms, searchTerm, filters])
 
   const filteredExhibitions = useMemo(() => {
-    const currentDate = new Date()
     return exhibitions
-      .map(exhibition => ({
-        ...exhibition,
-        status: isAfter(currentDate, parseISO(exhibition.전시종료일자))
-          ? '종료'
-          : isBefore(currentDate, parseISO(exhibition.전시시작일자))
-          ? '예정'
-          : '진행중'
-      }))
       .filter(exhibition => 
         exhibition.전시명.toLowerCase().includes(exhibitionSearchTerm.toLowerCase()) ||
         exhibition.작가명.toLowerCase().includes(exhibitionSearchTerm.toLowerCase())
@@ -572,7 +519,9 @@ export default function SomaMuseumPage() {
 
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="container mx-auto py-12 px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 m
+
+d:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>

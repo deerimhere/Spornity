@@ -1,19 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Activity, MapPin, Phone, Accessibility, Search, ChevronDown, Menu, X, Building } from "lucide-react"
+import { MapPin, Phone, Search, ChevronDown, Menu, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from 'framer-motion'
-import Papa from 'papaparse'
+import preprocessedDataRaw from '../../public/data/preprocessed_facilities_data.json'
 
 interface Facility {
   id: string
@@ -22,76 +19,77 @@ interface Facility {
   address: string
   phone: string
   agencyPhone: string
-  disabilityFriendly: string
   big: string
   normal: string
   small: string
 }
 
+interface PreprocessedData {
+  facilities: Facility[]
+  uniqueBig: string[]
+  uniqueNormal: string[]
+  uniqueSmall: string[]
+}
+
+const preprocessedData: PreprocessedData = preprocessedDataRaw as PreprocessedData
+
+const ITEMS_PER_PAGE = 9;
+
 export default function FacilitiesPage() {
-  const [facilities, setFacilities] = useState<Facility[]>([])
-  const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>([])
-  const [selectedBig, setSelectedBig] = useState('')
-  const [selectedNormal, setSelectedNormal] = useState('')
-  const [selectedSmall, setSelectedSmall] = useState('')
-  const [showDisabilityFriendly, setShowDisabilityFriendly] = useState(false)
+  const [facilities, setFacilities] = useState<Facility[]>(preprocessedData.facilities)
+  const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>(preprocessedData.facilities)
+  const [selectedBig, setSelectedBig] = useState('전체')
+  const [selectedNormal, setSelectedNormal] = useState('전체')
+  const [selectedSmall, setSelectedSmall] = useState('전체')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [uniqueBig, setUniqueBig] = useState<string[]>([])
-  const [uniqueNormal, setUniqueNormal] = useState<string[]>([])
-  const [uniqueSmall, setUniqueSmall] = useState<string[]>([])
+  const [uniqueBig] = useState<string[]>(['전체', ...preprocessedData.uniqueBig])
+  const [uniqueNormal, setUniqueNormal] = useState<string[]>(['전체', ...preprocessedData.uniqueNormal])
+  const [uniqueSmall, setUniqueSmall] = useState<string[]>(['전체', ...preprocessedData.uniqueSmall])
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch('/data/facilities.csv')
-      const reader = response.body?.getReader()
-      const result = await reader?.read()
-      const decoder = new TextDecoder('utf-8')
-      const csv = decoder.decode(result?.value)
-      const results = Papa.parse(csv, { header: true, skipEmptyLines: true })
-      const parsedData: Facility[] = results.data.map((row: any, index: number) => ({
-        id: index.toString(),
-        name: row.name || '정보 없음',
-        type: row.type || '정보 없음',
-        address: row.address || '정보 없음',
-        phone: row.phone || '정보 없음',
-        agencyPhone: row.agencyPhone || '정보 없음',
-        disabilityFriendly: row.disabilityFriendly || '정보 없음',
-        big: row.big || '정보 없음',
-        normal: row.normal || '정보 없음',
-        small: row.small || '정보 없음',
-      }))
-      setFacilities(parsedData)
+  const normalByBig = useMemo(() => {
+    const normal: { [key: string]: string[] } = { '전체': ['전체'] };
+    facilities.forEach(facility => {
+      if (!normal[facility.big]) {
+        normal[facility.big] = ['전체'];
+      }
+      if (!normal[facility.big].includes(facility.normal)) {
+        normal[facility.big].push(facility.normal);
+      }
+    });
+    return normal;
+  }, [facilities]);
 
-      const bigValues = [...new Set(parsedData.map(item => item.big))]
-      setUniqueBig(bigValues)
-    }
-
-    fetchData()
-  }, [])
+  const smallByNormal = useMemo(() => {
+    const small: { [key: string]: { [key: string]: string[] } } = { '전체': { '전체': ['전체'] } };
+    facilities.forEach(facility => {
+      if (!small[facility.big]) {
+        small[facility.big] = { '전체': ['전체'] };
+      }
+      if (!small[facility.big][facility.normal]) {
+        small[facility.big][facility.normal] = ['전체'];
+      }
+      if (!small[facility.big][facility.normal].includes(facility.small)) {
+        small[facility.big][facility.normal].push(facility.small);
+      }
+    });
+    return small;
+  }, [facilities]);
 
   useEffect(() => {
     let filtered = facilities
 
-    if (selectedBig) {
+    if (selectedBig !== '전체') {
       filtered = filtered.filter(facility => facility.big === selectedBig)
-      const normalValues = [...new Set(filtered.map(item => item.normal))]
-      setUniqueNormal(normalValues)
     }
 
-    if (selectedNormal) {
+    if (selectedNormal !== '전체') {
       filtered = filtered.filter(facility => facility.normal === selectedNormal)
-      const smallValues = [...new Set(filtered.map(item => item.small))]
-      setUniqueSmall(smallValues)
     }
 
-    if (selectedSmall) {
+    if (selectedSmall !== '전체') {
       filtered = filtered.filter(facility => facility.small === selectedSmall)
-    }
-
-    if (showDisabilityFriendly) {
-      filtered = filtered.filter(facility => facility.disabilityFriendly.toLowerCase() === 'yes')
     }
 
     if (searchTerm) {
@@ -101,25 +99,33 @@ export default function FacilitiesPage() {
       )
     }
 
-    if (activeTab === "disability") {
-      filtered = filtered.filter(facility => facility.disabilityFriendly.toLowerCase() === 'yes')
-    } else if (activeTab === "general") {
-      filtered = filtered.filter(facility => facility.disabilityFriendly.toLowerCase() === 'no')
-    }
-
     setFilteredFacilities(filtered)
-  }, [facilities, selectedBig, selectedNormal, selectedSmall, showDisabilityFriendly, searchTerm, activeTab])
+    setCurrentPage(1)
+  }, [facilities, selectedBig, selectedNormal, selectedSmall, searchTerm])
 
   const handleBigChange = (value: string) => {
     setSelectedBig(value)
-    setSelectedNormal('')
-    setSelectedSmall('')
+    setSelectedNormal('전체')
+    setSelectedSmall('전체')
+    setUniqueNormal(['전체', ...normalByBig[value]])
+    setUniqueSmall(['전체'])
   }
 
   const handleNormalChange = (value: string) => {
     setSelectedNormal(value)
-    setSelectedSmall('')
+    setSelectedSmall('전체')
+    setUniqueSmall(['전체', ...(smallByNormal[selectedBig][value] || [])])
   }
+
+  const handleSmallChange = (value: string) => {
+    setSelectedSmall(value)
+  }
+
+  const pageCount = Math.ceil(filteredFacilities.length / ITEMS_PER_PAGE);
+  const currentFacilities = filteredFacilities.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -235,86 +241,94 @@ export default function FacilitiesPage() {
                   <p className="text-gray-500 dark:text-gray-400">원하는 조건을 선택하여 체육 시설을 찾아보세요.</p>
                 </div>
                 <div className="space-y-4">
-                  <Select onValueChange={handleBigChange}>
+                  <Select onValueChange={handleBigChange} value={selectedBig}>
                     <SelectTrigger>
                       <SelectValue placeholder="도/시 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {uniqueBig.map((big) => (
-                        <SelectItem key={big} value={big}>
-                          {big}
-                        </SelectItem>
-                      ))}
+                      <div className="max-h-[200px] overflow-y-auto">
+                        {uniqueBig.map((big) => (
+                          <SelectItem key={big} value={big}>
+                            {big}
+                          </SelectItem>
+                        ))}
+                      </div>
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={handleNormalChange} disabled={!selectedBig}>
+                  <Select onValueChange={handleNormalChange} value={selectedNormal} disabled={selectedBig === '전체'}>
                     <SelectTrigger>
                       <SelectValue placeholder="시/군/구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {uniqueNormal.map((normal) => (
-                        <SelectItem key={normal} value={normal}>
-                          {normal}
-                        </SelectItem>
-                      ))}
+                      <div className="max-h-[200px] overflow-y-auto">
+                        {uniqueNormal.map((normal) => (
+                          <SelectItem key={normal} value={normal}>
+                            {normal}
+                          </SelectItem>
+                        ))}
+                      </div>
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={setSelectedSmall} disabled={!selectedNormal}>
+                  <Select onValueChange={handleSmallChange} value={selectedSmall} disabled={selectedNormal === '전체'}>
                     <SelectTrigger>
                       <SelectValue placeholder="읍/면/동 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {uniqueSmall.map((small) => (
-                        <SelectItem key={small} value={small}>
-                          {small}
-                        </SelectItem>
-                      ))}
+                      <div className="max-h-[200px] overflow-y-auto">
+                        {uniqueSmall.map((small) => (
+                          <SelectItem key={small} value={small}>
+                            {small}
+                          </SelectItem>
+                        ))}
+                      </div>
                     </SelectContent>
                   </Select>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="disability-friendly"
-                      checked={showDisabilityFriendly}
-                      onCheckedChange={setShowDisabilityFriendly}
+                  <div className="relative">
+                    <Input
+                      placeholder="시설 또는 종목 검색"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pr-8"
                     />
-                    <Label htmlFor="disability-friendly">장애인 친화 시설만 보기</Label>
+                    {searchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
+                        onClick={() => setSearchTerm("")}
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Clear search</span>
+                      </Button>
+                    )}
                   </div>
-                  <Input
-                    placeholder="시설 또는 종목 검색"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
                 </div>
               </div>
               <div className="space-y-4">
-                <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="all">전체</TabsTrigger>
-                    <TabsTrigger value="general">일반 시설</TabsTrigger>
-                    <TabsTrigger value="disability">장애인 친화 시설</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="all">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredFacilities.map((facility) => (
-                        <FacilityCard key={facility.id} facility={facility} />
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="general">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredFacilities.filter(facility => facility.disabilityFriendly.toLowerCase() === 'no').map((facility) => (
-                        <FacilityCard key={facility.id} facility={facility} />
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="disability">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredFacilities.filter(facility => facility.disabilityFriendly.toLowerCase() === 'yes').map((facility) => (
-                        <FacilityCard key={facility.id} facility={facility} />
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {currentFacilities.map((facility) => (
+                    <FacilityCard key={facility.id} facility={facility} />
+                  ))}
+                </div>
+                <div className="flex justify-center mt-8 space-x-2">
+                  <Button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    이전
+                  </Button>
+                  <span className="mx-2 self-center">
+                    {currentPage} / {pageCount}
+                  </span>
+                  <Button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount))}
+                    disabled={currentPage === pageCount}
+                  >
+                    다음
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -335,6 +349,7 @@ export default function FacilitiesPage() {
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
                 <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
                 <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
+                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
               </ul>
             </div>
             <div>
@@ -367,19 +382,16 @@ function FacilityCard({ facility }: { facility: Facility }) {
           transition={{ duration: 0.5 }}
           className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
         >
-          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
-            {facility.name}
-          </h3>
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-gray-600 dark:text-gray-400">{facility.type}</p>
-            <Badge variant="outline" className="bg-white text-black">
-              {facility.disabilityFriendly.toLowerCase() === 'yes' ? '장애인 친화' : '일반'}
-            </Badge>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {facility.name}
+            </h3>
           </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-2">{facility.type}</p>
           <div className="mt-4 space-y-2 text-sm">
             <p className="flex items-center text-gray-500">
               <MapPin className="w-4 h-4 mr-2" />
-              {facility.address}
+              {facility.big} {facility.normal} {facility.small}
             </p>
             <p className="flex items-center text-gray-500">
               <Phone className="w-4 h-4 mr-2" />
@@ -410,17 +422,7 @@ function FacilityCard({ facility }: { facility: Facility }) {
             <p className="text-lg">{facility.agencyPhone}</p>
           </div>
         </div>
-        <div>
-          <h4 className="font-bold text-lg mb-2">장애인 친화 정보</h4>
-          <p className="text-gray-600 dark:text-gray-400">
-            {facility.disabilityFriendly.toLowerCase() === 'yes' ? '장애인 친화 시설입니다.' : '일반 시설입니다.'}
-          </p>
-        </div>
         <div className="flex flex-wrap gap-2 mt-4">
-          <Badge variant="outline" className="bg-white text-black">
-            {facility.disabilityFriendly.toLowerCase() === 'yes' ? '장애인 친화' : '일반'}
-          </Badge>
-          <Badge variant="secondary">{facility.type}</Badge>
           <Badge variant="secondary">{facility.big}</Badge>
           <Badge variant="secondary">{facility.normal}</Badge>
           <Badge variant="secondary">{facility.small}</Badge>

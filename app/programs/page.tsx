@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Activity, Phone, Calendar, Clock, Globe, Users, Search, ChevronDown, Menu, X, MapPin } from "lucide-react"
+import { Activity, Phone, Calendar, Clock, Globe, Users, Search, ChevronDown, Menu, X, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { motion, AnimatePresence } from "framer-motion"
-import Papa from 'papaparse'
+import preprocessedDataRaw from '../../public/data/preprocessed_program_data.json'
 
 type Program = {
   id: number;
@@ -32,137 +32,66 @@ type Program = {
   priceType: string | null;
   website: string;
   isDisabilityProgram: boolean;
-  sportName?: string;
-  subSportName?: string;
-  disabilityType?: string;
   programIntroduction?: string;
-  recruitmentStartDate?: string;
-  recruitmentEndDate?: string;
 }
 
+type PreprocessedData = {
+  programs: Program[];
+}
+
+const preprocessedData: PreprocessedData = preprocessedDataRaw as PreprocessedData;
+
+const ITEMS_PER_PAGE = 9;
+
 export default function PublicProgramsPage() {
-  const [programs, setPrograms] = useState<Program[]>([])
-  const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([])
-  const [selectedRegion, setSelectedRegion] = useState('')
-  const [selectedCity, setSelectedCity] = useState('')
-  const [selectedTargetAudience, setSelectedTargetAudience] = useState('all')
-  const [selectedDisabilityType, setSelectedDisabilityType] = useState('all')
+  const [programs] = useState<Program[]>(preprocessedData.programs)
+  const [filteredPrograms, setFilteredPrograms] = useState<Program[]>(preprocessedData.programs)
+  const [selectedRegion, setSelectedRegion] = useState('전체')
+  const [selectedCity, setSelectedCity] = useState('전체')
+  const [selectedTargetAudience, setSelectedTargetAudience] = useState('전체')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [uniqueRegions, setUniqueRegions] = useState<string[]>([])
-  const [uniqueCities, setUniqueCities] = useState<string[]>([])
-  const [uniqueDisabilityTypes, setUniqueDisabilityTypes] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [regularResponse, disabilityResponse] = await Promise.all([
-        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EA%B3%B5%EA%B3%B5%EC%B2%B4%EC%9C%A1%EC%8B%9C%EC%84%A4%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8%EC%A0%95%EB%B3%B4%20%EC%9D%BC%EB%B6%80-clNcR9aFyNirMJ7ZBgTPl3YUiD40Zr.csv'),
-        fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%9E%A5%EC%95%A0%EC%9D%B8%EC%83%9D%ED%99%9C%EC%B2%B4%EC%9C%A1%EA%B5%90%EC%8B%A4%EB%8D%B0%EC%9D%B4%ED%84%B0-TyyuLqpjrVLBEcQ8zhbWjwPAQNr2wT.csv')
-      ])
+  const uniqueRegions = useMemo(() => ['전체', ...new Set(programs.map(program => program.region))], [programs])
 
-      const regularReader = regularResponse.body?.getReader()
-      const disabilityReader = disabilityResponse.body?.getReader()
+  const citiesByRegion = useMemo(() => {
+    const cities: { [key: string]: string[] } = { '전체': ['전체'] };
+    programs.forEach(program => {
+      if (!cities[program.region]) {
+        cities[program.region] = ['전체'];
+      }
+      if (!cities[program.region].includes(program.city)) {
+        cities[program.region].push(program.city);
+      }
+    });
+    return cities;
+  }, [programs]);
 
-      const [regularResult, disabilityResult] = await Promise.all([
-        regularReader?.read(),
-        disabilityReader?.read()
-      ])
-
-      const decoder = new TextDecoder('utf-8')
-      const regularCsv = decoder.decode(regularResult?.value)
-      const disabilityCsv = decoder.decode(disabilityResult?.value)
-
-      const regularResults = Papa.parse(regularCsv, { header: true, skipEmptyLines: true })
-      const disabilityResults = Papa.parse(disabilityCsv, { header: true, skipEmptyLines: true })
-
-      const regularPrograms: Program[] = regularResults.data.map((row: any, index: number) => ({
-        id: index,
-        facilityName: row['시설명'] || '정보 없음',
-        facilityType: row['시설유형명'] || '정보 없음',
-        region: row['시도명'] || '정보 없음',
-        city: row['시군구명'] || '정보 없음',
-        address: row['시설주소'] || '정보 없음',
-        phone: row['시설전화번호'] || '정보 없음',
-        programName: row['프로그램 명'] || '정보 없음',
-        targetAudience: row['프로그램 대상명'] || '정보 없음',
-        startDate: row['프로그램 시작일자'] || '정보 없음',
-        endDate: row['프로그램 종료일자'] || '정보 없음',
-        days: row['프로그램 개설 요일명'] || '정보 없음',
-        time: row['프로그램 개설 시간대값'] || '정보 없음',
-        capacity: row['프로그램 모집인원수'] || '0',
-        price: row['프로그램 가격'] || '정보 없음',
-        priceType: row['프로그램 가격 유형명'] || null,
-        website: row['홈페이지 유형명'] || '정보 없음',
-        isDisabilityProgram: false,
-      }))
-
-      const disabilityPrograms: Program[] = disabilityResults.data.map((row: any, index: number) => ({
-        id: regularPrograms.length + index,
-        facilityName: '정보 없음',
-        facilityType: '장애인 생활체육교실',
-        region: row['시도명'] || '정보 없음',
-        city: row['시군구명'] || '정보 없음',
-        address: '정보 없음',
-        phone: '정보 없음',
-        programName: row['프로그램명'] || '정보 없음',
-        targetAudience: '장애인',
-        startDate: row['운영시작일'] || '정보 없음',
-        endDate: row['운영종료일'] || '정보 없음',
-        days: row['운영시간']?.split(' ')[0] || '정보 없음',
-        time: row['운영시간']?.split(' ')[1] || '정보 없음',
-        capacity: '정보 없음',
-        price: '정보 없음',
-        priceType: null,
-        website: '정보 없음',
-        isDisabilityProgram: true,
-        sportName: row['종목명'] || '정보 없음',
-        subSportName: row['부종목명'] || '정보 없음',
-        disabilityType: row['장애유형명'] || '정보 없음',
-        programIntroduction: row['프로그램소개내용'] || '정보 없음',
-        recruitmentStartDate: row['모집시작일'] || '정보 없음',
-        recruitmentEndDate: row['모집종료일'] || '정보 없음',
-      }))
-
-      const allPrograms = [...regularPrograms, ...disabilityPrograms]
-      setPrograms(allPrograms)
-
-      const regions = [...new Set(allPrograms.map(item => item.region))]
-      setUniqueRegions(regions)
-
-      const disabilityTypes = [...new Set(disabilityPrograms.map(item => item.disabilityType))]
-      setUniqueDisabilityTypes(disabilityTypes)
-    }
-
-    fetchData()
-  }, [])
+  const currentCities = useMemo(() => {
+    return selectedRegion === '전체' ? ['전체'] : citiesByRegion[selectedRegion] || ['전체'];
+  }, [selectedRegion, citiesByRegion]);
 
   useEffect(() => {
     let filtered = programs
 
-    if (selectedRegion) {
+    if (selectedRegion !== '전체') {
       filtered = filtered.filter(program => program.region === selectedRegion)
-      const cities = [...new Set(filtered.map(item => item.city))]
-      setUniqueCities(cities)
     }
 
-    if (selectedCity) {
+    if (selectedCity !== '전체') {
       filtered = filtered.filter(program => program.city === selectedCity)
     }
 
-    if (selectedTargetAudience !== 'all') {
+    if (selectedTargetAudience !== '전체') {
       filtered = filtered.filter(program => program.targetAudience.includes(selectedTargetAudience))
-    }
-
-    if (selectedDisabilityType !== 'all') {
-      filtered = filtered.filter(program => program.disabilityType === selectedDisabilityType)
     }
 
     if (searchTerm) {
       filtered = filtered.filter(program => 
         program.programName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        program.facilityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (program.sportName && program.sportName.toLowerCase().includes(searchTerm.toLowerCase()))
+        program.facilityName.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -173,12 +102,23 @@ export default function PublicProgramsPage() {
     }
 
     setFilteredPrograms(filtered)
-  }, [programs, selectedRegion, selectedCity, selectedTargetAudience, selectedDisabilityType, searchTerm, activeTab])
+    setCurrentPage(1)
+  }, [programs, selectedRegion, selectedCity, selectedTargetAudience, searchTerm, activeTab])
 
   const handleRegionChange = (value: string) => {
     setSelectedRegion(value)
-    setSelectedCity('')
+    setSelectedCity('전체')
   }
+
+  const handleCityChange = (value: string) => {
+    setSelectedCity(value)
+  }
+
+  const pageCount = Math.ceil(filteredPrograms.length / ITEMS_PER_PAGE);
+  const currentPrograms = filteredPrograms.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -285,6 +225,7 @@ export default function PublicProgramsPage() {
             </div>
           </div>
         </section>
+
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
           <div className="container px-4 md:px-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
@@ -294,11 +235,11 @@ export default function PublicProgramsPage() {
                   <p className="text-gray-500 dark:text-gray-400">원하는 조건을 선택하여 프로그램을 찾아보세요.</p>
                 </div>
                 <div className="space-y-4">
-                  <Select onValueChange={handleRegionChange}>
+                  <Select onValueChange={handleRegionChange} value={selectedRegion}>
                     <SelectTrigger>
                       <SelectValue placeholder="지역 선택" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
                       {uniqueRegions.map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
@@ -306,24 +247,24 @@ export default function PublicProgramsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={setSelectedCity} disabled={!selectedRegion}>
+                  <Select onValueChange={handleCityChange} value={selectedCity} disabled={selectedRegion === '전체'}>
                     <SelectTrigger>
                       <SelectValue placeholder="시/군/구 선택" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {uniqueCities.map((city) => (
+                    <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                      {currentCities.map((city) => (
                         <SelectItem key={city} value={city}>
                           {city}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={setSelectedTargetAudience}>
+                  <Select onValueChange={setSelectedTargetAudience} value={selectedTargetAudience}>
                     <SelectTrigger>
                       <SelectValue placeholder="대상 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="전체">전체</SelectItem>
                       <SelectItem value="성인">성인</SelectItem>
                       <SelectItem value="청소년">청소년</SelectItem>
                       <SelectItem value="어린이">어린이</SelectItem>
@@ -331,26 +272,28 @@ export default function PublicProgramsPage() {
                       <SelectItem value="장애인">장애인</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={setSelectedDisabilityType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="장애 유형 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
-                      {uniqueDisabilityTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    placeholder="프로그램 또는 시설 검색"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  <div className="relative">
+                    <Input
+                      placeholder="프로그램 또는 시설 검색"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pr-8"
+                    />
+                    {searchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
+                        onClick={() => setSearchTerm("")}
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">검색어 지우기</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
+
               <div className="space-y-4">
                 <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-3">
@@ -360,26 +303,45 @@ export default function PublicProgramsPage() {
                   </TabsList>
                   <TabsContent value="all">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredPrograms.map((program) => (
+                      {currentPrograms.map((program) => (
                         <ProgramCard key={program.id} program={program} />
                       ))}
                     </div>
                   </TabsContent>
                   <TabsContent value="regular">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredPrograms.filter(program => !program.isDisabilityProgram).map((program) => (
+                      {currentPrograms.filter(program => !program.isDisabilityProgram).map((program) => (
                         <ProgramCard key={program.id} program={program} />
                       ))}
                     </div>
                   </TabsContent>
                   <TabsContent value="disability">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredPrograms.filter(program => program.isDisabilityProgram).map((program) => (
+                      {currentPrograms.filter(program => program.isDisabilityProgram).map((program) => (
                         <ProgramCard key={program.id} program={program} />
                       ))}
                     </div>
                   </TabsContent>
                 </Tabs>
+                <div className="flex justify-center mt-8 space-x-2">
+                  <Button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    이전
+                  </Button>
+                  <span className="mx-2 self-center">
+                    {currentPage} / {pageCount}
+                  </span>
+                  <Button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount))}
+                    disabled={currentPage === pageCount}
+                  >
+                    다음
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -390,7 +352,7 @@ export default function PublicProgramsPage() {
         <div className="container mx-auto py-12 px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
+              <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">Spornity</h3>
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
             </div>
             <div>
@@ -400,6 +362,7 @@ export default function PublicProgramsPage() {
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
                 <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
                 <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
+                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
               </ul>
             </div>
             <div>
@@ -432,19 +395,19 @@ function ProgramCard({ program }: { program: Program }) {
           transition={{ duration: 0.5 }}
           className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
         >
-          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
-            {program.programName}
-          </h3>
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-gray-600 dark:text-gray-400">{program.facilityName}</p>
-            <Badge variant="outline" className="bg-white text-black whitespace-nowrap">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {program.programName}
+            </h3>
+            <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2">
               {program.isDisabilityProgram ? '장애인 대상' : '일반인 대상'}
             </Badge>
           </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-2">{program.facilityName}</p>
           <div className="mt-4 space-y-2 text-sm">
             <p className="flex items-center text-gray-500">
               <Activity className="w-4 h-4 mr-2" />
-              {program.isDisabilityProgram ? program.sportName : program.targetAudience}
+              {program.targetAudience}
             </p>
             <p className="flex items-center text-gray-500">
               <MapPin className="w-4 h-4 mr-2" />
@@ -458,27 +421,8 @@ function ProgramCard({ program }: { program: Program }) {
           <DialogTitle className="text-2xl font-bold">{program.programName}</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4">
-          {program.isDisabilityProgram ? (
+          {!program.isDisabilityProgram && (
             <>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-500 mb-1">종목</h4>
-                <p className="text-lg">{program.sportName}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-500 mb-1">부종목</h4>
-                <p className="text-lg">{program.subSportName}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-500 mb-1">장애 유형</h4>
-                <p className="text-lg">{program.disabilityType}</p>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-500 mb-1">대상</h4>
-                <p className="text-lg">{program.targetAudience}</p>
-              </div>
               <div>
                 <h4 className="font-semibold text-sm text-gray-500 mb-1">시설명</h4>
                 <p className="text-lg">{program.facilityName}</p>
@@ -506,6 +450,10 @@ function ProgramCard({ program }: { program: Program }) {
             </>
           )}
           <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">대상</h4>
+            <p className="text-lg">{program.targetAudience}</p>
+          </div>
+          <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">기간</h4>
             <p className="text-lg">{program.startDate} ~ {program.endDate}</p>
           </div>
@@ -513,18 +461,7 @@ function ProgramCard({ program }: { program: Program }) {
             <h4 className="font-semibold text-sm text-gray-500 mb-1">요일 및 시간</h4>
             <p className="text-lg">{program.days} {program.time}</p>
           </div>
-          {program.isDisabilityProgram ? (
-            <>
-              <div className="col-span-2">
-                <h4 className="font-semibold text-sm text-gray-500 mb-1">프로그램 소개</h4>
-                <p className="text-lg">{program.programIntroduction}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-500 mb-1">모집 기간</h4>
-                <p className="text-lg">{program.recruitmentStartDate} ~ {program.recruitmentEndDate}</p>
-              </div>
-            </>
-          ) : (
+          {!program.isDisabilityProgram && (
             <>
               <div>
                 <h4 className="font-semibold text-sm text-gray-500 mb-1">모집 인원</h4>
@@ -537,6 +474,12 @@ function ProgramCard({ program }: { program: Program }) {
             </>
           )}
         </div>
+        {program.isDisabilityProgram && program.programIntroduction && (
+          <div className="mt-4">
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">프로그램 소개</h4>
+            <p className="text-lg">{program.programIntroduction}</p>
+          </div>
+        )}
         {!program.isDisabilityProgram && (
           <div className="mt-4">
             <h4 className="font-semibold text-sm text-gray-500 mb-1">홈페이지</h4>
@@ -548,8 +491,8 @@ function ProgramCard({ program }: { program: Program }) {
         <div className="flex flex-wrap gap-2 mt-4">
           <Badge variant="secondary">{program.region}</Badge>
           <Badge variant="secondary">{program.city}</Badge>
-          {program.isDisabilityProgram && (
-            <Badge variant="secondary">{program.disabilityType}</Badge>
+          {!program.isDisabilityProgram && (
+            <Badge variant="secondary">{program.facilityType}</Badge>
           )}
         </div>
       </DialogContent>
