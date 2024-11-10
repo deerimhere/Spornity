@@ -77,6 +77,10 @@ interface Filters {
   접수상태: string;
 }
 
+const getGoogleSearchUrl = (query: string) => {
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+};
+
 export default function SomaMuseumPage() {
   const [activeTab, setActiveTab] = useState("exhibition")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -220,7 +224,7 @@ export default function SomaMuseumPage() {
 
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-gDkCL29AGe6N4l5rlaSVLKzpmxAnpG.png')] bg-cover bg-center"></div>
+          <div className="absolute inset-0 bg-[url('/images/soma-museum-hero-bg.png')] bg-cover bg-center"></div>
           <div className="absolute inset-0 bg-black opacity-60"></div>
           <div className="container px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center text-center">
@@ -268,7 +272,7 @@ export default function SomaMuseumPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
+                transition={{ duration: 0.5 }}
                 >
                   <TabsContent value="exhibition" className="mt-6">
                     <h2 className="text-3xl font-bold mb-8 text-center">전시 정보</h2>
@@ -492,12 +496,15 @@ export default function SomaMuseumPage() {
                                 <p className="text-gray-600 dark:text-gray-400">{collection.출판사명} | {collection.발행년도}</p>
                               </div>
                               <div>
-                                <h4 className="font-bold text-lg mb-2">작품 설명</h4>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                  이 작품은 소마미술관의 주요 소장품 중 하나로, 작가의 독특한 예술 세계를 잘 보여주는 대표작입니다.
-                                  작품의 구성과 표현 기법은 당대의 예술적 흐름을 잘 반영하고 있으며, 
-                                  현대 미술사에서 중요한 의미를 지니고 있습니다.
+                                <h4 className="font-bold text-lg mb-2">작품 정보 검색</h4>
+                                <p className="text-gray-600 dark:text-gray-400 mb-2">
+                                  이 작품에 대한 자세한 정보를 구글에서 검색해보세요.
                                 </p>
+                                <Button asChild className="w-full">
+                                  <a href={getGoogleSearchUrl(`${collection.서적명} ${collection.작가명}`)} target="_blank" rel="noopener noreferrer">
+                                    구글에서 검색하기
+                                  </a>
+                                </Button>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 <Badge variant="secondary">도서</Badge>
@@ -519,9 +526,7 @@ export default function SomaMuseumPage() {
 
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="container mx-auto py-12 px-4">
-          <div className="grid grid-cols-1 m
-
-d:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
@@ -533,6 +538,7 @@ d:grid-cols-3 gap-8">
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
                 <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
                 <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
+                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
               </ul>
             </div>
             <div>
