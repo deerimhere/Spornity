@@ -39,9 +39,11 @@ export default function SupportPrograms() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedField, setSelectedField] = useState("all")
+  const [selectedYear, setSelectedYear] = useState("all")
   const [supportPrograms, setSupportPrograms] = useState<SupportProgram[]>([])
   const [filteredPrograms, setFilteredPrograms] = useState<SupportProgram[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [uniqueYears, setUniqueYears] = useState<string[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +69,9 @@ export default function SupportPrograms() {
         });
 
         setSupportPrograms(combinedData);
+
+        const years = Array.from(new Set(combinedData.map(program => program.지원년도))).sort((a, b) => b.localeCompare(a));
+        setUniqueYears(["all", ...years]);
       } catch (error) {
         console.error('Error fetching CSV data:', error);
       }
@@ -79,11 +84,12 @@ export default function SupportPrograms() {
     const filtered = supportPrograms.filter(program => 
       (program.사업과제명.toLowerCase().includes(searchTerm.toLowerCase()) ||
        program.상세사업명?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedField === "all" || program.지원분야명 === selectedField)
+      (selectedField === "all" || program.지원분야명 === selectedField) &&
+      (selectedYear === "all" || program.지원년도 === selectedYear)
     )
     setFilteredPrograms(filtered)
     setCurrentPage(1)
-  }, [searchTerm, selectedField, supportPrograms])
+  }, [searchTerm, selectedField, selectedYear, supportPrograms])
 
   const pageCount = Math.ceil(filteredPrograms.length / ITEMS_PER_PAGE);
   const currentPrograms = filteredPrograms.slice(
@@ -214,6 +220,18 @@ export default function SupportPrograms() {
                       <SelectItem value="일자리 지원">일자리 지원</SelectItem>
                       <SelectItem value="창업 지원">창업 지원</SelectItem>
                       {/* 더 많은 분야... */}
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={setSelectedYear} value={selectedYear}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="지원 년도 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {uniqueYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year === "all" ? "모든 년도" : `${year}년`}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <div className="relative">
