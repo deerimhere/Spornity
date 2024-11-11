@@ -44,6 +44,7 @@ export default function SupportPrograms() {
   const [filteredPrograms, setFilteredPrograms] = useState<SupportProgram[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [uniqueYears, setUniqueYears] = useState<string[]>([])
+  const [uniqueFields, setUniqueFields] = useState<string[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,6 +73,9 @@ export default function SupportPrograms() {
 
         const years = Array.from(new Set(combinedData.map(program => program.지원년도))).sort((a, b) => b.localeCompare(a));
         setUniqueYears(["all", ...years]);
+
+        const fields = Array.from(new Set(combinedData.map(program => program.지원분야명))).sort();
+        setUniqueFields(["all", ...fields]);
       } catch (error) {
         console.error('Error fetching CSV data:', error);
       }
@@ -216,10 +220,11 @@ export default function SupportPrograms() {
                       <SelectValue placeholder="지원 분야 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">모든 분야</SelectItem>
-                      <SelectItem value="일자리 지원">일자리 지원</SelectItem>
-                      <SelectItem value="창업 지원">창업 지원</SelectItem>
-                      {/* 더 많은 분야... */}
+                      {uniqueFields.map((field) => (
+                        <SelectItem key={field} value={field}>
+                          {field === "all" ? "모든 분야" : field}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select onValueChange={setSelectedYear} value={selectedYear}>
