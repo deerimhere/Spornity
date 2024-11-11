@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import { motion, AnimatePresence } from "framer-motion"
 import Papa from 'papaparse'
 
@@ -31,6 +33,41 @@ interface SupportProgram {
   홈페이지URL: string;
   담당부서명: string;
   문의전화번호: string;
+  신청방법내용: string;
+  선정방법내용: string;
+  사업수행내용: string;
+  사업평가내용: string;
+  지원자격: string;
+  신청자격: string;
+  지원대상사업규모값: string;
+  지원대상예비창업여부: string;
+  지원대상창업일자: string;
+  지원대상지원이력필요여부: string;
+  지원대상단체가능여부: string;
+  지원대상지자체가능여부: string;
+  지원대상개인가능여부: string;
+  지원대상관련법률명: string;
+  참여조건여부: string;
+  참여조건내용: string;
+  참여조건최소업력수: string;
+  참여조건최대업력수: string;
+  지원절차내용: string;
+  스타트업우선여부: string;
+  지원규모단위당최대지원금액: string;
+  지원규모비고내용: string;
+  기업자부담여부: string;
+  기업자부담기준설명: string;
+  기업자부담비율: string;
+  가점조건여부: string;
+  가점조건최대점수: string;
+  가점조건비고내용: string;
+  신청제외대상여부: string;
+  신청제외대상내용: string;
+  평가방식비계량비율: string;
+  평가방식계량비율: string;
+  평가방식서류평가여부: string;
+  평가방식발표평가여부: string;
+  평가방식비고내용: string;
 }
 
 const ITEMS_PER_PAGE = 9;
@@ -40,11 +77,18 @@ export default function SupportPrograms() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedField, setSelectedField] = useState("all")
   const [selectedYear, setSelectedYear] = useState("all")
+  const [selectedTarget, setSelectedTarget] = useState<string[]>([])
+  const [selectedBudget, setSelectedBudget] = useState("all")
+  const [selectedStartupStage, setSelectedStartupStage] = useState("all")
+  const [selectedRecruitmentStatus, setSelectedRecruitmentStatus] = useState("all")
   const [supportPrograms, setSupportPrograms] = useState<SupportProgram[]>([])
   const [filteredPrograms, setFilteredPrograms] = useState<SupportProgram[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [uniqueYears, setUniqueYears] = useState<string[]>([])
   const [uniqueFields, setUniqueFields] = useState<string[]>([])
+  const [selectedStartupPriority, setSelectedStartupPriority] = useState("all")
+  const [selectedSelfPayment, setSelectedSelfPayment] = useState("all")
+  const [selectedEvaluation, setSelectedEvaluation] = useState("all")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,7 +110,17 @@ export default function SupportPrograms() {
           const matchingTeam = teamData.find(team => 
             team.사업과제명 === qual.사업과제명 && team.지원년도 === qual.지원년도
           );
-          return { ...qual, ...matchingTeam, id: `${qual.사업과제명}-${qual.지원년도}-${index}` };
+          return { 
+            ...qual, 
+            ...matchingTeam, 
+            id: `${qual.사업과제명}-${qual.지원년도}-${index}`,
+            신청방법내용: matchingTeam?.신청방법내용 || 'N/A',
+            선정방법내용: matchingTeam?.선정방법내용 || 'N/A',
+            사업수행내용: matchingTeam?.사업수행내용 || 'N/A',
+            사업평가내용: matchingTeam?.사업평가내용 || 'N/A',
+            지원자격: qual.지원자격 || matchingTeam?.지원자격 || 'N/A',
+            신청자격: qual.신청자격 || matchingTeam?.신청자격 || 'N/A'
+          };
         });
 
         setSupportPrograms(combinedData);
@@ -89,11 +143,40 @@ export default function SupportPrograms() {
       (program.사업과제명.toLowerCase().includes(searchTerm.toLowerCase()) ||
        program.상세사업명?.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (selectedField === "all" || program.지원분야명 === selectedField) &&
-      (selectedYear === "all" || program.지원년도 === selectedYear)
+      (selectedYear === "all" || program.지원년도 === selectedYear) &&
+      (selectedTarget.length === 0 || 
+        (selectedTarget.includes('개인') && program.지원대상개인가능여부 === 'Y') ||
+        (selectedTarget.includes('단체') && program.지원대상단체가능여부 === 'Y') ||
+        (selectedTarget.includes('지자체') && program.지원대상지자체가능여부 === 'Y') ||
+        (selectedTarget.includes('예외') && 
+         program.지원대상개인가능여부 !== 'Y' && 
+         program.지원대상단체가능여부 !== 'Y' && 
+         program.지원대상지자체가능여부 !== 'Y')) &&
+      (selectedBudget === "all" || 
+        (selectedBudget === "low" && Number(program.지원규모총예산금액) < 100000000) ||
+        (selectedBudget === "medium" && Number(program.지원규모총예산금액) >= 100000000 && Number(program.지원규모총예산금액) < 1000000000) ||
+        (selectedBudget === "high" && Number(program.지원규모총예산금액) >= 1000000000)) &&
+      (selectedStartupStage === "all" || 
+        (selectedStartupStage === "pre" && program.지원대상예비창업여부 === 'Y') ||
+        (selectedStartupStage === "post" && program.지원대상예비창업여부 !== 'Y')) &&
+      (selectedRecruitmentStatus === "all" || 
+        (selectedRecruitmentStatus === "ongoing" && new Date() >= new Date(program.모집기간시작일자) && new Date() <= new Date(program.모집기간종료일자)) ||
+        (selectedRecruitmentStatus === "upcoming" && new Date() < new Date(program.모집기간시작일자)) ||
+        (selectedRecruitmentStatus === "closed" && new Date() > new Date(program.모집기간종료일자))) &&
+      (selectedStartupPriority === "all" || 
+        (selectedStartupPriority === "yes" && program.스타트업우선여부 === 'Y') ||
+        (selectedStartupPriority === "no" && program.스타트업우선여부 !== 'Y')) &&
+      (selectedSelfPayment === "all" || 
+        (selectedSelfPayment === "required" && program.기업자부담여부 === 'Y') ||
+        (selectedSelfPayment === "not-required" && program.기업자부담여부 !== 'Y')) &&
+      (selectedEvaluation === "all" || 
+        (selectedEvaluation === "document" && program.평가방식서류평가여부 === 'Y') ||
+        (selectedEvaluation === "presentation" && program.평가방식발표평가여부 === 'Y'))
     )
     setFilteredPrograms(filtered)
     setCurrentPage(1)
-  }, [searchTerm, selectedField, selectedYear, supportPrograms])
+  }, [searchTerm, selectedField, selectedYear, selectedTarget, selectedBudget, selectedStartupStage, 
+      selectedRecruitmentStatus, selectedStartupPriority, selectedSelfPayment, selectedEvaluation, supportPrograms])
 
   const pageCount = Math.ceil(filteredPrograms.length / ITEMS_PER_PAGE);
   const currentPrograms = filteredPrograms.slice(
@@ -140,6 +223,9 @@ export default function SupportPrograms() {
               <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 AI PT
               </Link>
+              <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                지원사업
+              </Link>
             </nav>
             <div className="flex items-center space-x-4">
               <Button asChild variant="outline" size="sm" className="hidden md:inline-flex hover:bg-blue-50 dark:hover:bg-blue-900">
@@ -179,6 +265,9 @@ export default function SupportPrograms() {
             </Link>
             <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               AI PT
+            </Link>
+            <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              지원사업
             </Link>
             <Link href="/login" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               로그인
@@ -239,6 +328,129 @@ export default function SupportPrograms() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <div className="space-y-2">
+                    <Label>지원 대상</Label>
+                    <div className="flex flex-wrap gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="individual" 
+                          checked={selectedTarget.includes('개인')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTarget([...selectedTarget, '개인'])
+                            } else {
+                              setSelectedTarget(selectedTarget.filter(t => t !== '개인'))
+                            }
+                          }}
+                        />
+                        <label htmlFor="individual">개인</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="organization" 
+                          checked={selectedTarget.includes('단체')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTarget([...selectedTarget, '단체'])
+                            } else {
+                              setSelectedTarget(selectedTarget.filter(t => t !== '단체'))
+                            }
+                          }}
+                        />
+                        <label htmlFor="organization">단체</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="local-gov" 
+                          checked={selectedTarget.includes('지자체')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTarget([...selectedTarget, '지자체'])
+                            } else {
+                              setSelectedTarget(selectedTarget.filter(t => t !== '지자체'))
+                            }
+                          }}
+                        />
+                        <label htmlFor="local-gov">지자체</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="exception" 
+                          checked={selectedTarget.includes('예외')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTarget([...selectedTarget, '예외'])
+                            } else {
+                              setSelectedTarget(selectedTarget.filter(t => t !== '예외'))
+                            }
+                          }}
+                        />
+                        <label htmlFor="exception">예외</label>
+                      </div>
+                    </div>
+                  </div>
+                  <Select onValueChange={setSelectedBudget} value={selectedBudget}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="지원 규모 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">모든 규모</SelectItem>
+                      <SelectItem value="low">1억 미만</SelectItem>
+                      <SelectItem value="medium">1억 이상 10억 미만</SelectItem>
+                      <SelectItem value="high">10억 이상</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={setSelectedStartupStage} value={selectedStartupStage}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="창업 단계 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">모든 단계</SelectItem>
+                      <SelectItem value="pre">예비 창업</SelectItem>
+                      <SelectItem value="post">창업 후</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={setSelectedRecruitmentStatus} value={selectedRecruitmentStatus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="모집 상태 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">모든 상태</SelectItem>
+                      <SelectItem value="ongoing">모집 중</SelectItem>
+                      <SelectItem value="upcoming">모집 예정</SelectItem>
+                      <SelectItem value="closed">모집 마감</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={setSelectedStartupPriority} value={selectedStartupPriority}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="스타트업 우선 지원" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="yes">스타트업 우선</SelectItem>
+                      <SelectItem value="no">일반</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={setSelectedSelfPayment} value={selectedSelfPayment}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="자부담 여부" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="required">자부담 필요</SelectItem>
+                      <SelectItem value="not-required">자부담 불필요</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={setSelectedEvaluation} value={selectedEvaluation}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="평가 방식" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="document">서류 평가</SelectItem>
+                      <SelectItem value="presentation">발표 평가</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <div className="relative">
                     <Input
                       placeholder="프로그램 검색..."
@@ -296,6 +508,7 @@ export default function SupportPrograms() {
                 <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
                 <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
                 <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
+                <li><Link href="/support" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지원사업</Link></li>
               </ul>
             </div>
             <div>
@@ -332,32 +545,99 @@ function ProgramCard({ program }: { program: SupportProgram }) {
             <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {program.사업과제명}
             </h3>
-            <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2">
-              {program.지원분야명}
-            </Badge>
+            <div className="flex flex-col items-end space-y-1">
+              <Badge variant="outline" className="bg-white text-black whitespace-nowrap">
+                {program.지원분야명}
+              </Badge>
+              <Badge variant="outline" className="bg-white text-black whitespace-nowrap">
+                {program.지원년도}년
+              </Badge>
+            </div>
           </div>
           <p className="text-gray-600 dark:text-gray-400 mb-2">{program.상세사업명 || 'N/A'}</p>
           <p className="text-gray-500 line-clamp-2">{program.사업목적내용 || 'N/A'}</p>
         </motion.div>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{program.사업과제명}</DialogTitle>
           <DialogDescription>{program.지원분야명} | {program.지원년도}년</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">사업 목적</h4>
             <p className="text-gray-700 dark:text-gray-300">{program.사업목적내용 || 'N/A'}</p>
           </div>
-          <div>
-            <h4 className="font-semibold text-sm text-gray-500 mb-1">지원 대상</h4>
-            <p className="text-gray-700 dark:text-gray-300">{program.지원대상비고내용 || 'N/A'}</p>
+          
+          <div className="grid gap-4">
+            <h4 className="font-semibold text-sm text-gray-500">지원 대상 정보</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <div>
+                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">지원 가능 대상</h5>
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    개인: {program.지원대상개인가능여부 === 'Y' ? '가능' : '불가능'}
+                  </p>
+                  <p className="text-sm">
+                    단체: {program.지원대상단체가능여부 === 'Y' ? '가능' : '불가능'}
+                  </p>
+                  <p className="text-sm">
+                    지자체: {program.지원대상지자체가능여부 === 'Y' ? '가능' : '불가능'}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">사업 규모 요건</h5>
+                <p className="text-sm">{program.지원대상사업규모값 || 'N/A'}</p>
+              </div>
+              <div>
+                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">창업 관련 요건</h5>
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    예비창업: {program.지원대상예비창업여부 === 'Y' ? '가능' : '불가능'}
+                  </p>
+                  {program.지원대상창업일자 && (
+                    <p className="text-sm">창업일자 기준: {program.지원대상창업일자}</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">업력 요건</h5>
+                <div className="space-y-1">
+                  {program.참여조건최소업력수 && (
+                    <p className="text-sm">최소 업력: {program.참여조건최소업력수}</p>
+                  )}
+                  {program.참여조건최대업력수 && (
+                    <p className="text-sm">최대 업력: {program.참여조건최대업력수}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            {program.지원대상관련법률명 && (
+              <div>
+                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">관련 법률</h5>
+                <p className="text-sm">{program.지원대상관련법률명}</p>
+              </div>
+            )}
           </div>
+
+          {program.참여조건여부 === 'Y' && program.참여조건내용 && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">참여 조건</h4>
+              <p className="text-gray-700 dark:text-gray-300">{program.참여조건내용}</p>
+            </div>
+          )}
+
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">지원 내용</h4>
             <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{program.지원상세내용 || 'N/A'}</p>
           </div>
+
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">지원 절차</h4>
+            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{program.지원절차내용 || 'N/A'}</p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h4 className="font-semibold text-sm text-gray-500 mb-1">모집 기간</h4>
@@ -366,40 +646,127 @@ function ProgramCard({ program }: { program: SupportProgram }) {
                   `${new Date(program.모집기간시작일자).toLocaleDateString()} ~ ${new Date(program.모집기간종료일자).toLocaleDateString()}` : 
                   'N/A'}
               </p>
+              {program.모집기간비고내용 && (
+                <p className="text-sm text-gray-500 mt-1">{program.모집기간비고내용}</p>
+              )}
             </div>
             <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">모집 기간 비고</h4>
-              <p className="text-gray-700 dark:text-gray-300">{program.모집기간비고내용 || 'N/A'}</p>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">지원 기간</h4>
+              <p className="text-gray-700 dark:text-gray-300">
+                {program.지원기간시작일자 && program.지원기간종료일자 ? 
+                  `${new Date(program.지원기간시작일자).toLocaleDateString()} ~ ${new Date(program.지원기간종료일자).toLocaleDateString()}` : 
+                  'N/A'}
+              </p>
             </div>
           </div>
+
+          <div className="grid gap-4">
+            <h4 className="font-semibold text-sm text-gray-500">지원금 및 자부담 정보</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <div>
+                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">최대 지원금</h5>
+                <p className="text-sm">{program.지원규모단위당최대지원금액 || 'N/A'}</p>
+                {program.지원규모비고내용 && (
+                  <p className="text-sm text-gray-500 mt-1">{program.지원규모비고내용}</p>
+                )}
+              </div>
+              <div>
+                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">자부담 정보</h5>
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    자부담 필요: {program.기업자부담여부 === 'Y' ? '예' : '아니오'}
+                  </p>
+                  {program.기업자부담비율 && (
+                    <p className="text-sm">자부담 비율: {program.기업자부담비율}</p>
+                  )}
+                  {program.기업자부담기준설명 && (
+                    <p className="text-sm text-gray-500">{program.기업자부담기준설명}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {program.가점조건여부 === 'Y' && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">가점 조건</h4>
+              <div className="space-y-2">
+                {program.가점조건최대점수 && (
+                  <p className="text-sm">최대 가점: {program.가점조건최대점수}점</p>
+                )}
+                {program.가점조건비고내용 && (
+                  <p className="text-gray-700 dark:text-gray-300">{program.가점조건비고내용}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {program.신청제외대상여부 === 'Y' && program.신청제외대상내용 && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">신청 제외 대상</h4>
+              <p className="text-gray-700 dark:text-gray-300">{program.신청제외대상내용}</p>
+            </div>
+          )}
+
           <div>
-            <h4 className="font-semibold text-sm text-gray-500 mb-1">지원 기간</h4>
-            <p className="text-gray-700 dark:text-gray-300">
-              {program.지원기간시작일자 && program.지원기간종료일자 ? 
-                `${new Date(program.지원기간시작일자).toLocaleDateString()} ~ ${new Date(program.지원기간종료일자).toLocaleDateString()}` : 
-                'N/A'}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">총 예산</h4>
-              <p className="text-gray-700 dark:text-gray-300">{program.지원규모총예산금액 ? `${Number(program.지원규모총예산금액).toLocaleString()}원` : 'N/A'}</p>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">평가 방식</h4>
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm">계량평가: {program.평가방식계량비율 || '0'}%</p>
+                  <p className="text-sm">비계량평가: {program.평가방식비계량비율 || '0'}%</p>
+                </div>
+                <div>
+                  <p className="text-sm">
+                    서류평가: {program.평가방식서류평가여부 === 'Y' ? '있음' : '없음'}
+                  </p>
+                  <p className="text-sm">
+                    발표평가: {program.평가방식발표평가여부 === 'Y' ? '있음' : '없음'}
+                  </p>
+                </div>
+              </div>
+              {program.평가방식비고내용 && (
+                <p className="text-sm text-gray-500">{program.평가방식비고내용}</p>
+              )}
             </div>
-            <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">지원 규모</h4>
-              <p className="text-gray-700 dark:text-gray-300">{program.지원규모수 ? `${program.지원규모수}개` : 'N/A'}</p>
-            </div>
           </div>
+
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">신청 방법</h4>
+            <p className="text-gray-700 dark:text-gray-300">{program.신청방법내용 || 'N/A'}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">선정 방법</h4>
+            <p className="text-gray-700 dark:text-gray-300">{program.선정방법내용 || 'N/A'}</p>
+          </div>
+
+          {program.사업수행내용 && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">사업 수행 내용</h4>
+              <p className="text-gray-700 dark:text-gray-300">{program.사업수행내용}</p>
+            </div>
+          )}
+
+          {program.사업평가내용 && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">사업 평가</h4>
+              <p className="text-gray-700 dark:text-gray-300">{program.사업평가내용}</p>
+            </div>
+          )}
         </div>
+
         <div className="flex flex-wrap gap-2 mt-4">
           <Badge variant="secondary">{program.지원분야명}</Badge>
           <Badge variant="secondary">{program.지원년도}년</Badge>
         </div>
+
         <div className="mt-4">
           <Button asChild className="w-full">
             <a href={program.홈페이지URL} target="_blank" rel="noopener noreferrer">자세히 보기</a>
           </Button>
         </div>
+
         <div className="mt-4 text-sm text-gray-500">
           <p>담당: {program.담당부서명 || 'N/A'}</p>
           <p>문의: {program.문의전화번호 || 'N/A'}</p>
