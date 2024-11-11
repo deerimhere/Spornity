@@ -36,15 +36,15 @@ const preprocessedData: PreprocessedData = preprocessedDataRaw as PreprocessedDa
 const ITEMS_PER_PAGE = 9;
 
 export default function FacilitiesPage() {
-  const [facilities, setFacilities] = useState<Facility[]>(preprocessedData.facilities)
+  const [facilities] = useState<Facility[]>(preprocessedData.facilities)
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>(preprocessedData.facilities)
   const [selectedBig, setSelectedBig] = useState('전체')
   const [selectedNormal, setSelectedNormal] = useState('전체')
   const [selectedSmall, setSelectedSmall] = useState('전체')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [uniqueBig] = useState<string[]>(['전체', ...preprocessedData.uniqueBig])
-  const [uniqueNormal, setUniqueNormal] = useState<string[]>(['전체', ...preprocessedData.uniqueNormal])
-  const [uniqueSmall, setUniqueSmall] = useState<string[]>(['전체', ...preprocessedData.uniqueSmall])
+  const [uniqueBig] = useState<string[]>(['전체', ...new Set(preprocessedData.uniqueBig)])
+  const [uniqueNormal, setUniqueNormal] = useState<string[]>(['전체', ...new Set(preprocessedData.uniqueNormal)])
+  const [uniqueSmall, setUniqueSmall] = useState<string[]>(['전체', ...new Set(preprocessedData.uniqueSmall)])
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -107,14 +107,16 @@ export default function FacilitiesPage() {
     setSelectedBig(value)
     setSelectedNormal('전체')
     setSelectedSmall('전체')
-    setUniqueNormal(['전체', ...normalByBig[value]])
+    const newNormal = ['전체', ...new Set(normalByBig[value] || [])]
+    setUniqueNormal(newNormal.filter((item, index) => newNormal.indexOf(item) === index))
     setUniqueSmall(['전체'])
   }
 
   const handleNormalChange = (value: string) => {
     setSelectedNormal(value)
     setSelectedSmall('전체')
-    setUniqueSmall(['전체', ...(smallByNormal[selectedBig][value] || [])])
+    const newSmall = ['전체', ...new Set(smallByNormal[selectedBig][value] || [])]
+    setUniqueSmall(newSmall.filter((item, index) => newSmall.indexOf(item) === index))
   }
 
   const handleSmallChange = (value: string) => {
@@ -261,7 +263,7 @@ export default function FacilitiesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        {uniqueNormal.map((normal) => (
+                        {uniqueNormal.filter((item, index) => uniqueNormal.indexOf(item) === index).map((normal) => (
                           <SelectItem key={normal} value={normal}>
                             {normal}
                           </SelectItem>
@@ -275,7 +277,7 @@ export default function FacilitiesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        {uniqueSmall.map((small) => (
+                        {uniqueSmall.filter((item, index) => uniqueSmall.indexOf(item) === index).map((small) => (
                           <SelectItem key={small} value={small}>
                             {small}
                           </SelectItem>
