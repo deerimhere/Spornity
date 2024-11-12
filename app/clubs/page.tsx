@@ -230,8 +230,8 @@ export default function ClubsPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="지역 선택" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">도/시 선택</SelectItem>
+                    <SelectContent className="max-h-[264px] overflow-y-auto">
+                      <SelectItem value="all">전체 지역</SelectItem>
                       {uniqueRegions.filter(region => region !== 'all').map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
@@ -247,8 +247,8 @@ export default function ClubsPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="구 선택" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">시/군/구 선택</SelectItem>
+                    <SelectContent className="max-h-[264px] overflow-y-auto">
+                      <SelectItem value="all">전체 구</SelectItem>
                       {currentDistricts.filter(district => district !== 'all').map((district) => (
                         <SelectItem key={district} value={district}>
                           {district}
@@ -378,32 +378,33 @@ function ClubCard({ club }: { club: Club }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[200px] relative"
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[150px] flex flex-col"
         >
-          <div className="flex justify-between items-start">
-            <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 truncate">
               {club.name}
             </h3>
-            <Badge variant="outline" className="bg-white text-black whitespace-nowrap">
+            <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2 flex-shrink-0">
               {club.disabilityFriendly ? '장애인 동호회' : '일반인 동호회'}
             </Badge>
           </div>
-          <div className="mt-4 space-y-2 text-sm">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{club.sport}</p>
+          <div className="mt-auto space-y-2 text-sm">
             <p className="flex items-center text-gray-500">
               {club.disabilityFriendly ? (
                 <>
-                  <Calendar className="w-4 h-4 mr-2" />
+                  <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="truncate">모임 일정: {club.meetingDay}</span>
                 </>
               ) : (
                 <>
-                  <Users className="w-4 h-4 mr-2" />
+                  <Users className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="truncate">모임 인원: {club.members}명</span>
                 </>
               )}
             </p>
             <p className="flex items-center text-gray-500">
-              <MapPin className="w-4 h-4 mr-2" />
+              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="truncate">지역: {club.region} {club.district}</span>
             </p>
           </div>

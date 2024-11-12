@@ -267,10 +267,10 @@ export default function PublicProgramsPage() {
                   </Select>
                   <Select onValueChange={setSelectedTargetAudience} value={selectedTargetAudience}>
                     <SelectTrigger>
-                      <SelectValue placeholder="연령대 선택" />
+                      <SelectValue placeholder="대상 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">연령대 선택</SelectItem>
+                      <SelectItem value="all">전체</SelectItem>
                       <SelectItem value="성인">성인</SelectItem>
                       <SelectItem value="청소년">청소년</SelectItem>
                       <SelectItem value="어린이">어린이</SelectItem>
@@ -401,25 +401,25 @@ function ProgramCard({ program }: { program: Program }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[200px] relative"
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[150px] flex flex-col"
         >
           <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
               {program.programName}
             </h3>
             <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2">
               {program.isDisabilityProgram ? '장애인 대상' : '일반인 대상'}
             </Badge>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-2">{program.facilityName}</p>
-          <div className="mt-4 space-y-2 text-sm">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{program.facilityName}</p>
+          <div className="mt-auto space-y-2 text-sm">
             <p className="flex items-center text-gray-500">
-              <Activity className="w-4 h-4 mr-2" />
-              {program.targetAudience}
+              <Activity className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{program.targetAudience}</span>
             </p>
             <p className="flex items-center text-gray-500">
-              <MapPin className="w-4 h-4 mr-2" />
-              {program.region} {program.city}
+              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{program.region} {program.city}</span>
             </p>
           </div>
         </motion.div>

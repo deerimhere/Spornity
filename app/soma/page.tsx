@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, Book, Clock, Users, ChevronDown, Menu, X, Search, User, Building, ArrowRight } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Calendar, Users, ChevronDown, Menu, X, Search, ArrowRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -18,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { motion, AnimatePresence } from "framer-motion"
-import { format, isAfter, isBefore, parseISO } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import preprocessedData from '../../public/data/preprocessed_soma_data.json'
 
 interface Collection {
@@ -581,27 +579,30 @@ function ExhibitionCard({ exhibition }: { exhibition: Exhibition }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40 flex flex-col h-[400px]"
         >
-          <div className="aspect-w-16 aspect-h-9 mb-4">
+          <div className="relative w-full h-48 mb-4 flex items-center justify-center">
             <img
               src={`https://soma.kspo.or.kr${exhibition.전시이미지URL}`}
               alt={exhibition.전시이미지명}
-              className="object-cover rounded-lg w-full h-auto"
-              style={{ maxWidth: '60%', margin: '0 auto' }}
+              className="object-contain w-full h-full rounded-lg"
             />
           </div>
-          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
-            {exhibition.전시명}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">{exhibition.작가명}</p>
-          <div className="mt-4 flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              {format(parseISO(exhibition.전시시작일자), 'yyyy.MM.dd')} - {format(parseISO(exhibition.전시종료일자), 'yyyy.MM.dd')}
+          <div className="flex-1 flex flex-col">
+            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+              {exhibition.전시명}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-auto line-clamp-3 overflow-hidden">
+              {exhibition.작가명}
             </p>
-            <Badge variant={exhibition.status === '진행중' ? 'default' : 'secondary'}>
-              {exhibition.status}
-            </Badge>
+            <div className="mt-4 flex justify-between items-center">
+              <p className="text-sm text-gray-500">
+                {format(parseISO(exhibition.전시시작일자), 'yyyy.MM.dd')} - {format(parseISO(exhibition.전시종료일자), 'yyyy.MM.dd')}
+              </p>
+              <Badge variant={exhibition.status === '진행중' ? 'default' : 'secondary'}>
+                {exhibition.status}
+              </Badge>
+            </div>
           </div>
         </motion.div>
       </DialogTrigger>
@@ -613,8 +614,7 @@ function ExhibitionCard({ exhibition }: { exhibition: Exhibition }) {
           <img
             src={`https://soma.kspo.or.kr${exhibition.전시이미지URL}`}
             alt={exhibition.전시이미지명}
-            className="w-full h-auto rounded-lg"
-            style={{ maxWidth: '60%', margin: '0 auto' }}
+            className="w-full h-auto rounded-lg object-contain max-h-[300px]"
           />
           <div>
             <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{exhibition.작가명}</p>
