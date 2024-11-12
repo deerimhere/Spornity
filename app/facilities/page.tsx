@@ -38,21 +38,21 @@ const ITEMS_PER_PAGE = 9;
 export default function FacilitiesPage() {
   const [facilities] = useState<Facility[]>(preprocessedData.facilities)
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>(preprocessedData.facilities)
-  const [selectedBig, setSelectedBig] = useState('전체')
-  const [selectedNormal, setSelectedNormal] = useState('전체')
-  const [selectedSmall, setSelectedSmall] = useState('전체')
+  const [selectedBig, setSelectedBig] = useState('all')
+  const [selectedNormal, setSelectedNormal] = useState('all')
+  const [selectedSmall, setSelectedSmall] = useState('all')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [uniqueBig] = useState<string[]>(['전체', ...new Set(preprocessedData.uniqueBig)])
-  const [uniqueNormal, setUniqueNormal] = useState<string[]>(['전체', ...new Set(preprocessedData.uniqueNormal)])
-  const [uniqueSmall, setUniqueSmall] = useState<string[]>(['전체', ...new Set(preprocessedData.uniqueSmall)])
+  const [uniqueBig] = useState<string[]>(['all', ...new Set(preprocessedData.uniqueBig)])
+  const [uniqueNormal, setUniqueNormal] = useState<string[]>(['all', ...new Set(preprocessedData.uniqueNormal)])
+  const [uniqueSmall, setUniqueSmall] = useState<string[]>(['all', ...new Set(preprocessedData.uniqueSmall)])
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
 
   const normalByBig = useMemo(() => {
-    const normal: { [key: string]: string[] } = { '전체': ['전체'] };
+    const normal: { [key: string]: string[] } = { 'all': ['all'] };
     facilities.forEach(facility => {
       if (!normal[facility.big]) {
-        normal[facility.big] = ['전체'];
+        normal[facility.big] = ['all'];
       }
       if (!normal[facility.big].includes(facility.normal)) {
         normal[facility.big].push(facility.normal);
@@ -62,13 +62,13 @@ export default function FacilitiesPage() {
   }, [facilities]);
 
   const smallByNormal = useMemo(() => {
-    const small: { [key: string]: { [key: string]: string[] } } = { '전체': { '전체': ['전체'] } };
+    const small: { [key: string]: { [key: string]: string[] } } = { 'all': { 'all': ['all'] } };
     facilities.forEach(facility => {
       if (!small[facility.big]) {
-        small[facility.big] = { '전체': ['전체'] };
+        small[facility.big] = { 'all': ['all'] };
       }
       if (!small[facility.big][facility.normal]) {
-        small[facility.big][facility.normal] = ['전체'];
+        small[facility.big][facility.normal] = ['all'];
       }
       if (!small[facility.big][facility.normal].includes(facility.small)) {
         small[facility.big][facility.normal].push(facility.small);
@@ -80,15 +80,15 @@ export default function FacilitiesPage() {
   useEffect(() => {
     let filtered = facilities
 
-    if (selectedBig !== '전체') {
+    if (selectedBig && selectedBig !== 'all') {
       filtered = filtered.filter(facility => facility.big === selectedBig)
     }
 
-    if (selectedNormal !== '전체') {
+    if (selectedNormal && selectedNormal !== 'all') {
       filtered = filtered.filter(facility => facility.normal === selectedNormal)
     }
 
-    if (selectedSmall !== '전체') {
+    if (selectedSmall && selectedSmall !== 'all') {
       filtered = filtered.filter(facility => facility.small === selectedSmall)
     }
 
@@ -105,17 +105,17 @@ export default function FacilitiesPage() {
 
   const handleBigChange = (value: string) => {
     setSelectedBig(value)
-    setSelectedNormal('전체')
-    setSelectedSmall('전체')
-    const newNormal = ['전체', ...new Set(normalByBig[value] || [])]
+    setSelectedNormal('all')
+    setSelectedSmall('all')
+    const newNormal = value === 'all' ? ['all'] : ['all', ...new Set(normalByBig[value] || [])]
     setUniqueNormal(newNormal.filter((item, index) => newNormal.indexOf(item) === index))
-    setUniqueSmall(['전체'])
+    setUniqueSmall(['all'])
   }
 
   const handleNormalChange = (value: string) => {
     setSelectedNormal(value)
-    setSelectedSmall('전체')
-    const newSmall = ['전체', ...new Set(smallByNormal[selectedBig][value] || [])]
+    setSelectedSmall('all')
+    const newSmall = value === 'all' ? ['all'] : ['all', ...new Set(smallByNormal[selectedBig][value] || [])]
     setUniqueSmall(newSmall.filter((item, index) => newSmall.indexOf(item) === index))
   }
 
@@ -140,6 +140,21 @@ export default function FacilitiesPage() {
               </span>
             </Link>
             <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                AI PT
+              </Link>
+              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                맞춤 운동 추천
+              </Link>
+              <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                지원사업
+              </Link>
+              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                소마미술관
+              </Link>
+              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                프로그램
+              </Link>
               <div className="relative group">
                 <span className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center">
                   지역
@@ -156,18 +171,6 @@ export default function FacilitiesPage() {
                   </div>
                 </div>
               </div>
-              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                맞춤 운동 추천
-              </Link>
-              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                프로그램
-              </Link>
-              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                소마미술관
-              </Link>
-              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                AI PT
-              </Link>
             </nav>
             <div className="flex items-center space-x-4">
               <Button asChild variant="outline" size="sm" className="hidden md:inline-flex hover:bg-blue-50 dark:hover:bg-blue-900">
@@ -187,6 +190,21 @@ export default function FacilitiesPage() {
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-800 py-4">
           <nav className="container mx-auto px-4 flex flex-col space-y-4">
+            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              AI PT
+            </Link>
+            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              맞춤 운동 추천
+            </Link>
+            <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              지원사업
+            </Link>
+            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              소마미술관
+            </Link>
+            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              프로그램
+            </Link>
             <div className="flex flex-col space-y-2">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">지역</span>
               <Link href="/facilities" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors pl-4">
@@ -196,18 +214,6 @@ export default function FacilitiesPage() {
                 지역 동호회
               </Link>
             </div>
-            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              맞춤 운동 추천
-            </Link>
-            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              프로그램
-            </Link>
-            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              소마미술관
-            </Link>
-            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              AI PT
-            </Link>
             <Link href="/login" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               로그인
             </Link>
@@ -249,7 +255,8 @@ export default function FacilitiesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        {uniqueBig.map((big) => (
+                        <SelectItem value="all">도/시 선택</SelectItem>
+                        {uniqueBig.filter(big => big !== 'all').map((big) => (
                           <SelectItem key={big} value={big}>
                             {big}
                           </SelectItem>
@@ -257,13 +264,14 @@ export default function FacilitiesPage() {
                       </div>
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={handleNormalChange} value={selectedNormal} disabled={selectedBig === '전체'}>
+                  <Select onValueChange={handleNormalChange} value={selectedNormal} disabled={!selectedBig || selectedBig === 'all'}>
                     <SelectTrigger>
                       <SelectValue placeholder="시/군/구 선택" />
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        {uniqueNormal.filter((item, index) => uniqueNormal.indexOf(item) === index).map((normal) => (
+                        <SelectItem value="all">시/군/구 선택</SelectItem>
+                        {uniqueNormal.filter(normal => normal !== 'all').map((normal) => (
                           <SelectItem key={normal} value={normal}>
                             {normal}
                           </SelectItem>
@@ -271,13 +279,14 @@ export default function FacilitiesPage() {
                       </div>
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={handleSmallChange} value={selectedSmall} disabled={selectedNormal === '전체'}>
+                  <Select onValueChange={handleSmallChange} value={selectedSmall} disabled={!selectedNormal || selectedNormal === 'all'}>
                     <SelectTrigger>
                       <SelectValue placeholder="읍/면/동 선택" />
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        {uniqueSmall.filter((item, index) => uniqueSmall.indexOf(item) === index).map((small) => (
+                        <SelectItem value="all">읍/면/동 선택</SelectItem>
+                        {uniqueSmall.filter(small => small !== 'all').map((small) => (
                           <SelectItem key={small} value={small}>
                             {small}
                           </SelectItem>
@@ -292,17 +301,7 @@ export default function FacilitiesPage() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pr-8"
                     />
-                    {searchTerm && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
-                        onClick={() => setSearchTerm("")}
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Clear search</span>
-                      </Button>
-                    )}
+                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
               </div>
@@ -316,9 +315,10 @@ export default function FacilitiesPage() {
                   <Button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
+                    className="p-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    이전
+                    <span className="sr-only">이전</span>
                   </Button>
                   <span className="mx-2 self-center">
                     {currentPage} / {pageCount}
@@ -326,9 +326,10 @@ export default function FacilitiesPage() {
                   <Button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount))}
                     disabled={currentPage === pageCount}
+                    className="p-2"
                   >
-                    다음
                     <ChevronRight className="h-4 w-4" />
+                    <span className="sr-only">다음</span>
                   </Button>
                 </div>
               </div>
@@ -347,11 +348,13 @@ export default function FacilitiesPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
               <ul className="space-y-2">
+                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
+                <li><Link href="/support" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지원사업</Link></li>
+                <li><Link href="/soma" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">소마미술관</Link></li>
+                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
                 <li><Link href="/facilities" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 체육 시설</Link></li>
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
-                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
-                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
-                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
               </ul>
             </div>
             <div>
@@ -382,14 +385,14 @@ function FacilityCard({ facility }: { facility: Facility }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[200px] relative"
         >
           <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <h3 className="font-bold text-xl md:text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {facility.name}
             </h3>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-2">{facility.type}</p>
+          <p className="text-base md:text-base text-gray-600 dark:text-gray-400 mb-2">{facility.type}</p>
           <div className="mt-4 space-y-2 text-sm">
             <p className="flex items-center text-gray-500">
               <MapPin className="w-4 h-4 mr-2" />
@@ -406,22 +409,22 @@ function FacilityCard({ facility }: { facility: Facility }) {
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{facility.name}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4">
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">시설 유형</h4>
-            <p className="text-lg">{facility.type}</p>
+            <p className="text-gray-700 dark:text-gray-300">{facility.type}</p>
           </div>
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">주소</h4>
-            <p className="text-lg">{facility.address}</p>
+            <p className="text-gray-700 dark:text-gray-300">{facility.address}</p>
           </div>
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">전화번호</h4>
-            <p className="text-lg">{facility.phone}</p>
+            <p className="text-gray-700 dark:text-gray-300">{facility.phone}</p>
           </div>
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">기관 전화번호</h4>
-            <p className="text-lg">{facility.agencyPhone}</p>
+            <p className="text-gray-700 dark:text-gray-300">{facility.agencyPhone}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-4">

@@ -38,19 +38,19 @@ const ITEMS_PER_PAGE = 9;
 export default function ClubsPage() {
   const [clubs, setClubs] = useState<Club[]>((preprocessedData as PreprocessedData).clubs)
   const [filteredClubs, setFilteredClubs] = useState<Club[]>((preprocessedData as PreprocessedData).clubs)
-  const [selectedRegion, setSelectedRegion] = useState('전체')
-  const [selectedDistrict, setSelectedDistrict] = useState('전체')
+  const [selectedRegion, setSelectedRegion] = useState('all')
+  const [selectedDistrict, setSelectedDistrict] = useState('all')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [uniqueRegions] = useState<string[]>(['전체', ...(preprocessedData as PreprocessedData).uniqueRegions])
+  const [uniqueRegions] = useState<string[]>(['all', ...(preprocessedData as PreprocessedData).uniqueRegions])
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
 
   const districtsByRegion = useMemo(() => {
-    const districts: { [key: string]: string[] } = { '전체': ['전체'] };
+    const districts: { [key: string]: string[] } = { 'all': ['all'] };
     clubs.forEach(club => {
       if (!districts[club.region]) {
-        districts[club.region] = ['전체'];
+        districts[club.region] = ['all'];
       }
       if (!districts[club.region].includes(club.district)) {
         districts[club.region].push(club.district);
@@ -60,17 +60,17 @@ export default function ClubsPage() {
   }, [clubs]);
 
   const currentDistricts = useMemo(() => {
-    return selectedRegion === '전체' ? ['전체'] : districtsByRegion[selectedRegion] || ['전체'];
+    return selectedRegion === 'all' ? ['all'] : districtsByRegion[selectedRegion] || ['all'];
   }, [selectedRegion, districtsByRegion]);
 
   useEffect(() => {
     let filtered = clubs
 
-    if (selectedRegion && selectedRegion !== '전체') {
+    if (selectedRegion && selectedRegion !== 'all') {
       filtered = filtered.filter(club => club.region === selectedRegion)
     }
 
-    if (selectedDistrict && selectedDistrict !== '전체') {
+    if (selectedDistrict && selectedDistrict !== 'all') {
       filtered = filtered.filter(club => club.district === selectedDistrict)
     }
 
@@ -93,7 +93,7 @@ export default function ClubsPage() {
 
   const handleRegionChange = (value: string) => {
     setSelectedRegion(value)
-    setSelectedDistrict('전체')
+    setSelectedDistrict('all')
   }
 
   const handleDistrictChange = (value: string) => {
@@ -117,6 +117,21 @@ export default function ClubsPage() {
               </span>
             </Link>
             <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                AI PT
+              </Link>
+              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                맞춤 운동 추천
+              </Link>
+              <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                지원사업
+              </Link>
+              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                소마미술관
+              </Link>
+              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                프로그램
+              </Link>
               <div className="relative group">
                 <span className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center">
                   지역
@@ -133,18 +148,6 @@ export default function ClubsPage() {
                   </div>
                 </div>
               </div>
-              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                맞춤 운동 추천
-              </Link>
-              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                프로그램
-              </Link>
-              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                소마미술관
-              </Link>
-              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                AI PT
-              </Link>
             </nav>
             <div className="flex items-center space-x-4">
               <Button asChild variant="outline" size="sm" className="hidden md:inline-flex hover:bg-blue-50 dark:hover:bg-blue-900">
@@ -164,6 +167,21 @@ export default function ClubsPage() {
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-800 py-4">
           <nav className="container mx-auto px-4 flex flex-col space-y-4">
+            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              AI PT
+            </Link>
+            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              맞춤 운동 추천
+            </Link>
+            <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              지원사업
+            </Link>
+            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              소마미술관
+            </Link>
+            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              프로그램
+            </Link>
             <div className="flex flex-col space-y-2">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">지역</span>
               <Link href="/facilities" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors pl-4">
@@ -173,18 +191,6 @@ export default function ClubsPage() {
                 지역 동호회
               </Link>
             </div>
-            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              맞춤 운동 추천
-            </Link>
-            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              프로그램
-            </Link>
-            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              소마미술관
-            </Link>
-            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              AI PT
-            </Link>
             <Link href="/login" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               로그인
             </Link>
@@ -225,7 +231,8 @@ export default function ClubsPage() {
                       <SelectValue placeholder="지역 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {uniqueRegions.map((region) => (
+                      <SelectItem value="all">도/시 선택</SelectItem>
+                      {uniqueRegions.filter(region => region !== 'all').map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
                         </SelectItem>
@@ -235,13 +242,14 @@ export default function ClubsPage() {
                   <Select 
                     onValueChange={handleDistrictChange} 
                     value={selectedDistrict}
-                    disabled={!selectedRegion || selectedRegion === '전체'}
+                    disabled={!selectedRegion || selectedRegion === 'all'}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {currentDistricts.map((district) => (
+                      <SelectItem value="all">시/군/구 선택</SelectItem>
+                      {currentDistricts.filter(district => district !== 'all').map((district) => (
                         <SelectItem key={district} value={district}>
                           {district}
                         </SelectItem>
@@ -304,7 +312,7 @@ export default function ClubsPage() {
                     disabled={currentPage === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    이전
+                    <span className="sr-only">이전</span>
                   </Button>
                   <span className="mx-2 self-center">
                     {currentPage} / {pageCount}
@@ -313,7 +321,7 @@ export default function ClubsPage() {
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount))}
                     disabled={currentPage === pageCount}
                   >
-                    다음
+                    <span className="sr-only">다음</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -333,11 +341,13 @@ export default function ClubsPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
               <ul className="space-y-2">
+                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
+                <li><Link href="/support" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지원사업</Link></li>
+                <li><Link href="/soma" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">소마미술관</Link></li>
+                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
                 <li><Link href="/facilities" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 체육 시설</Link></li>
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
-                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
-                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
-                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
               </ul>
             </div>
             <div>
@@ -368,34 +378,33 @@ function ClubCard({ club }: { club: Club }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[200px] relative"
         >
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          <div className="flex justify-between items-start">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
               {club.name}
             </h3>
-            <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2">
+            <Badge variant="outline" className="bg-white text-black whitespace-nowrap">
               {club.disabilityFriendly ? '장애인 동호회' : '일반인 동호회'}
             </Badge>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-2">{club.sport}</p>
           <div className="mt-4 space-y-2 text-sm">
             <p className="flex items-center text-gray-500">
               {club.disabilityFriendly ? (
                 <>
                   <Calendar className="w-4 h-4 mr-2" />
-                  모임 일정: {club.meetingDay}
+                  <span className="truncate">모임 일정: {club.meetingDay}</span>
                 </>
               ) : (
                 <>
                   <Users className="w-4 h-4 mr-2" />
-                  모임 인원: {club.members}명
+                  <span className="truncate">모임 인원: {club.members}명</span>
                 </>
               )}
             </p>
             <p className="flex items-center text-gray-500">
               <MapPin className="w-4 h-4 mr-2" />
-              지역: {club.region} {club.district}
+              <span className="truncate">지역: {club.region} {club.district}</span>
             </p>
           </div>
         </motion.div>
@@ -404,43 +413,41 @@ function ClubCard({ club }: { club: Club }) {
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{club.name}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4">
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">종목</h4>
-            <p className="text-lg">{club.sport}</p>
+            <p className="text-gray-700 dark:text-gray-300">{club.sport}</p>
           </div>
           {club.disabilityFriendly ? (
             <div>
               <h4 className="font-semibold text-sm text-gray-500 mb-1">모임 일정</h4>
-              <p className="text-lg">{club.meetingDay}</p>
+              <p className="text-gray-700 dark:text-gray-300">{club.meetingDay}</p>
             </div>
           ) : (
             <div>
               <h4 className="font-semibold text-sm text-gray-500 mb-1">모임 인원</h4>
-              <p className="text-lg">{club.members}명</p>
+              <p className="text-gray-700 dark:text-gray-300">{club.members}명</p>
             </div>
           )}
           <div>
             <h4 className="font-semibold text-sm text-gray-500 mb-1">지역</h4>
-            <p className="text-lg">{club.region} {club.district}</p>
+            <p className="text-gray-700 dark:text-gray-300">{club.region} {club.district}</p>
           </div>
           {club.disabilityFriendly && (
             <div>
               <h4 className="font-semibold text-sm text-gray-500 mb-1">장애 유형</h4>
-              <p className="text-lg">{club.disabilityType}</p>
+              <p className="text-gray-700 dark:text-gray-300">{club.disabilityType}</p>
+            </div>
+          )}
+          {club.introduction && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">동호회 소개</h4>
+              <p className="text-gray-700 dark:text-gray-300">{club.introduction}</p>
             </div>
           )}
         </div>
-        {club.introduction && (
-          <div className="mt-4">
-            <h4 className="font-semibold text-sm text-gray-500 mb-1">동호회 소개</h4>
-            <p className="text-gray-700 dark:text-gray-300">{club.introduction}</p>
-          </div>
-        )}
         <div className="flex flex-wrap gap-2 mt-4">
-          <Badge variant="outline" className="bg-white text-black">
-            {club.disabilityFriendly ? '장애인 동호회' : '일반인 동호회'}
-          </Badge>
+          <Badge variant="secondary">{club.disabilityFriendly ? '장애인 동호회' : '일반인 동호회'}</Badge>
           <Badge variant="secondary">{club.sport}</Badge>
           <Badge variant="secondary">{club.region}</Badge>
           <Badge variant="secondary">{club.district}</Badge>

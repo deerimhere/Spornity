@@ -144,6 +144,21 @@ export default function SomaMuseumPage() {
               </span>
             </Link>
             <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                AI PT
+              </Link>
+              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                맞춤 운동 추천
+              </Link>
+              <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                지원사업
+              </Link>
+              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                소마미술관
+              </Link>
+              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                프로그램
+              </Link>
               <div className="relative group">
                 <span className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center">
                   지역
@@ -160,18 +175,6 @@ export default function SomaMuseumPage() {
                   </div>
                 </div>
               </div>
-              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                맞춤 운동 추천
-              </Link>
-              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                프로그램
-              </Link>
-              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                소마미술관
-              </Link>
-              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                AI PT
-              </Link>
             </nav>
             <div className="flex items-center space-x-4">
               <Button asChild variant="outline" size="sm" className="hidden md:inline-flex hover:bg-blue-50 dark:hover:bg-blue-900">
@@ -191,6 +194,21 @@ export default function SomaMuseumPage() {
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-800 py-4">
           <nav className="container mx-auto px-4 flex flex-col space-y-4">
+            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              AI PT
+            </Link>
+            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              맞춤 운동 추천
+            </Link>
+            <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              지원사업
+            </Link>
+            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              소마미술관
+            </Link>
+            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              프로그램
+            </Link>
             <div className="flex flex-col space-y-2">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">지역</span>
               <Link href="/facilities" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors pl-4">
@@ -200,18 +218,6 @@ export default function SomaMuseumPage() {
                 지역 동호회
               </Link>
             </div>
-            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              맞춤 운동 추천
-            </Link>
-            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              프로그램
-            </Link>
-            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              소마미술관
-            </Link>
-            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              AI PT
-            </Link>
             <Link href="/login" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               로그인
             </Link>
@@ -290,11 +296,15 @@ export default function SomaMuseumPage() {
                     </div>
                     
                     <h3 className="text-2xl font-bold mb-4">현재 전시</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                      {currentExhibitions.map((exhibition, index) => (
-                        <ExhibitionCard key={index} exhibition={exhibition} />
-                      ))}
-                    </div>
+                    {currentExhibitions.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                        {currentExhibitions.map((exhibition, index) => (
+                          <ExhibitionCard key={index} exhibition={exhibition} />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-600 dark:text-gray-400 mb-12">현재 전시가 진행중이지 않습니다.</p>
+                    )}
 
                     <h3 className="text-2xl font-bold mb-4">지난 전시</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -524,7 +534,7 @@ export default function SomaMuseumPage() {
         </section>
       </main>
 
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="container mx-auto py-12 px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
@@ -534,11 +544,13 @@ export default function SomaMuseumPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
               <ul className="space-y-2">
+                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
+                <li><Link href="/support" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지원사업</Link></li>
+                <li><Link href="/soma" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">소마미술관</Link></li>
+                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
                 <li><Link href="/facilities" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 체육 시설</Link></li>
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
-                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
-                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
-                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
               </ul>
             </div>
             <div>

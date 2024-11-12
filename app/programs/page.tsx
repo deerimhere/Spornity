@@ -46,21 +46,21 @@ const ITEMS_PER_PAGE = 9;
 export default function PublicProgramsPage() {
   const [programs] = useState<Program[]>(preprocessedData.programs)
   const [filteredPrograms, setFilteredPrograms] = useState<Program[]>(preprocessedData.programs)
-  const [selectedRegion, setSelectedRegion] = useState('전체')
-  const [selectedCity, setSelectedCity] = useState('전체')
-  const [selectedTargetAudience, setSelectedTargetAudience] = useState('전체')
+  const [selectedRegion, setSelectedRegion] = useState('')
+  const [selectedCity, setSelectedCity] = useState('')
+  const [selectedTargetAudience, setSelectedTargetAudience] = useState('all')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
 
-  const uniqueRegions = useMemo(() => ['전체', ...new Set(programs.map(program => program.region))], [programs])
+  const uniqueRegions = useMemo(() => [...new Set(programs.map(program => program.region))], [programs])
 
   const citiesByRegion = useMemo(() => {
-    const cities: { [key: string]: string[] } = { '전체': ['전체'] };
+    const cities: { [key: string]: string[] } = {};
     programs.forEach(program => {
       if (!cities[program.region]) {
-        cities[program.region] = ['전체'];
+        cities[program.region] = [];
       }
       if (!cities[program.region].includes(program.city)) {
         cities[program.region].push(program.city);
@@ -70,21 +70,21 @@ export default function PublicProgramsPage() {
   }, [programs]);
 
   const currentCities = useMemo(() => {
-    return selectedRegion === '전체' ? ['전체'] : citiesByRegion[selectedRegion] || ['전체'];
+    return selectedRegion ? citiesByRegion[selectedRegion] || [] : [];
   }, [selectedRegion, citiesByRegion]);
 
   useEffect(() => {
     let filtered = programs
 
-    if (selectedRegion !== '전체') {
+    if (selectedRegion) {
       filtered = filtered.filter(program => program.region === selectedRegion)
     }
 
-    if (selectedCity !== '전체') {
+    if (selectedCity) {
       filtered = filtered.filter(program => program.city === selectedCity)
     }
 
-    if (selectedTargetAudience !== '전체') {
+    if (selectedTargetAudience !== 'all') {
       filtered = filtered.filter(program => program.targetAudience.includes(selectedTargetAudience))
     }
 
@@ -107,7 +107,7 @@ export default function PublicProgramsPage() {
 
   const handleRegionChange = (value: string) => {
     setSelectedRegion(value)
-    setSelectedCity('전체')
+    setSelectedCity('')
   }
 
   const handleCityChange = (value: string) => {
@@ -131,6 +131,21 @@ export default function PublicProgramsPage() {
               </span>
             </Link>
             <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                AI PT
+              </Link>
+              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                맞춤 운동 추천
+              </Link>
+              <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                지원사업
+              </Link>
+              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                소마미술관
+              </Link>
+              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                프로그램
+              </Link>
               <div className="relative group">
                 <span className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center">
                   지역
@@ -147,18 +162,6 @@ export default function PublicProgramsPage() {
                   </div>
                 </div>
               </div>
-              <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                맞춤 운동 추천
-              </Link>
-              <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                프로그램
-              </Link>
-              <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                소마미술관
-              </Link>
-              <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                AI PT
-              </Link>
             </nav>
             <div className="flex items-center space-x-4">
               <Button asChild variant="outline" size="sm" className="hidden md:inline-flex hover:bg-blue-50 dark:hover:bg-blue-900">
@@ -178,6 +181,21 @@ export default function PublicProgramsPage() {
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-800 py-4">
           <nav className="container mx-auto px-4 flex flex-col space-y-4">
+            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              AI PT
+            </Link>
+            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              맞춤 운동 추천
+            </Link>
+            <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              지원사업
+            </Link>
+            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              소마미술관
+            </Link>
+            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              프로그램
+            </Link>
             <div className="flex flex-col space-y-2">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">지역</span>
               <Link href="/facilities" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors pl-4">
@@ -187,18 +205,6 @@ export default function PublicProgramsPage() {
                 지역 동호회
               </Link>
             </div>
-            <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              맞춤 운동 추천
-            </Link>
-            <Link href="/programs" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              프로그램
-            </Link>
-            <Link href="/soma" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              소마미술관
-            </Link>
-            <Link href="/ai-pt" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              AI PT
-            </Link>
             <Link href="/login" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               로그인
             </Link>
@@ -237,9 +243,9 @@ export default function PublicProgramsPage() {
                 <div className="space-y-4">
                   <Select onValueChange={handleRegionChange} value={selectedRegion}>
                     <SelectTrigger>
-                      <SelectValue placeholder="지역 선택" />
+                      <SelectValue placeholder="도/시 선택" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                    <SelectContent className="max-h-[264px] overflow-y-auto">
                       {uniqueRegions.map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
@@ -247,11 +253,11 @@ export default function PublicProgramsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select onValueChange={handleCityChange} value={selectedCity} disabled={selectedRegion === '전체'}>
+                  <Select onValueChange={handleCityChange} value={selectedCity} disabled={!selectedRegion}>
                     <SelectTrigger>
                       <SelectValue placeholder="시/군/구 선택" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                    <SelectContent className="max-h-[264px] overflow-y-auto">
                       {currentCities.map((city) => (
                         <SelectItem key={city} value={city}>
                           {city}
@@ -261,10 +267,10 @@ export default function PublicProgramsPage() {
                   </Select>
                   <Select onValueChange={setSelectedTargetAudience} value={selectedTargetAudience}>
                     <SelectTrigger>
-                      <SelectValue placeholder="대상 선택" />
+                      <SelectValue placeholder="연령대 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="전체">전체</SelectItem>
+                      <SelectItem value="all">연령대 선택</SelectItem>
                       <SelectItem value="성인">성인</SelectItem>
                       <SelectItem value="청소년">청소년</SelectItem>
                       <SelectItem value="어린이">어린이</SelectItem>
@@ -329,7 +335,7 @@ export default function PublicProgramsPage() {
                     disabled={currentPage === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    이전
+                    <span className="sr-only">이전</span>
                   </Button>
                   <span className="mx-2 self-center">
                     {currentPage} / {pageCount}
@@ -338,7 +344,7 @@ export default function PublicProgramsPage() {
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount))}
                     disabled={currentPage === pageCount}
                   >
-                    다음
+                    <span className="sr-only">다음</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -352,17 +358,19 @@ export default function PublicProgramsPage() {
         <div className="container mx-auto py-12 px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">Spornity</h3>
+              <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Spornity</h3>
               <p className="text-gray-600 dark:text-gray-400">당신의 건강한 삶을 위한 모든 것</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
               <ul className="space-y-2">
+                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
+                <li><Link href="/support" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지원사업</Link></li>
+                <li><Link href="/soma" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">소마미술관</Link></li>
+                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
                 <li><Link href="/facilities" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 체육 시설</Link></li>
                 <li><Link href="/clubs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지역 동호회</Link></li>
-                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
-                <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
-                <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
               </ul>
             </div>
             <div>
@@ -393,7 +401,7 @@ function ProgramCard({ program }: { program: Program }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-sm hover:shadow-md dark:shadow-gray-800/30 dark:hover:shadow-gray-700/40"
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[200px] relative"
         >
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
