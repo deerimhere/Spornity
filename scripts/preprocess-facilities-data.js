@@ -20,8 +20,8 @@ async function preprocessFacilityData() {
       agencyPhone: row.agencyPhone || '정보 없음',
       disabilityFriendly: row.disabilityFriendly || '정보 없음',
       big: row.big || '정보 없음',
-      normal: row.normal || '정보 없음',
-      small: row.small || '정보 없음',
+      normal: row.normal || ' ',
+      small: row.small || ' ',
     }));
 
     // 고유한 지역 정보 추출
