@@ -82,9 +82,9 @@ const getGoogleSearchUrl = (query: string) => {
 export default function SomaMuseumPage() {
   const [activeTab, setActiveTab] = useState("exhibition")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [collections, setCollections] = useState<Collection[]>(preprocessedData.collections)
-  const [educationPrograms, setEducationPrograms] = useState<EducationProgram[]>(preprocessedData.educationPrograms)
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>(preprocessedData.exhibitions)
+  const [collections] = useState<Collection[]>(preprocessedData.collections)
+  const [educationPrograms] = useState<EducationProgram[]>(preprocessedData.educationPrograms)
+  const [exhibitions] = useState<Exhibition[]>(preprocessedData.exhibitions)
   const [searchTerm, setSearchTerm] = useState("")
   const [exhibitionSearchTerm, setExhibitionSearchTerm] = useState("")
   const [filters, setFilters] = useState<Filters>({

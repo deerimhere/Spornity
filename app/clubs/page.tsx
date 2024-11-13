@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Users, MapPin, Calendar, Search, Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Users, MapPin, Calendar, Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import preprocessedData from '../../public/data/preprocessed_club_data.json'
 
 interface Club {
@@ -36,7 +35,7 @@ interface PreprocessedData {
 const ITEMS_PER_PAGE = 9;
 
 export default function ClubsPage() {
-  const [clubs, setClubs] = useState<Club[]>((preprocessedData as PreprocessedData).clubs)
+  const [clubs] = useState<Club[]>((preprocessedData as PreprocessedData).clubs)
   const [filteredClubs, setFilteredClubs] = useState<Club[]>((preprocessedData as PreprocessedData).clubs)
   const [selectedRegion, setSelectedRegion] = useState('all')
   const [selectedDistrict, setSelectedDistrict] = useState('all')

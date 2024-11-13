@@ -3,13 +3,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { MapPin, Phone, Search, ChevronDown, Menu, X, ChevronLeft, ChevronRight } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import preprocessedDataRaw from '../../public/data/preprocessed_facilities_data.json'
 
 interface Facility {
