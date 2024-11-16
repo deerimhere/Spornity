@@ -230,7 +230,7 @@ export default function ClubsPage() {
                       <SelectValue placeholder="지역 선택" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[264px] overflow-y-auto">
-                      <SelectItem value="all">전체 지역</SelectItem>
+                      <SelectItem value="all">도/시 선택</SelectItem>
                       {uniqueRegions.filter(region => region !== 'all').map((region) => (
                         <SelectItem key={region} value={region}>
                           {region}
@@ -247,7 +247,7 @@ export default function ClubsPage() {
                       <SelectValue placeholder="구 선택" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[264px] overflow-y-auto">
-                      <SelectItem value="all">전체 구</SelectItem>
+                      <SelectItem value="all">시/군/구 선택</SelectItem>
                       {currentDistricts.filter(district => district !== 'all').map((district) => (
                         <SelectItem key={district} value={district}>
                           {district}

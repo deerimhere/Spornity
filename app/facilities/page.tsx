@@ -254,7 +254,7 @@ export default function FacilitiesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        <SelectItem value="all">전체</SelectItem>
+                        <SelectItem value="all">도/시 선택</SelectItem>
                         {uniqueBig.filter(big => big !== 'all').map((big) => (
                           <SelectItem key={big} value={big}>
                             {big}
@@ -269,7 +269,7 @@ export default function FacilitiesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        <SelectItem value="all">전체</SelectItem>
+                        <SelectItem value="all">시/군/구 선택</SelectItem>
                         {uniqueNormal.filter(normal => normal !== 'all').map((normal) => (
                           <SelectItem key={normal} value={normal}>
                             {normal}
@@ -284,7 +284,7 @@ export default function FacilitiesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <div className="max-h-[200px] overflow-y-auto">
-                        <SelectItem value="all">전체</SelectItem>
+                        <SelectItem value="all">읍/면/동 선택</SelectItem>
                         {uniqueSmall.filter(small => small !== 'all').map((small) => (
                           <SelectItem key={small} value={small}>
                             {small}

@@ -266,9 +266,9 @@ export default function PublicProgramsPage() {
                   </Select>
                   <Select onValueChange={setSelectedTargetAudience} value={selectedTargetAudience}>
                     <SelectTrigger>
-                      <SelectValue placeholder="대상 선택" />
+                      <SelectValue placeholder="연령대 선택" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[264px] overflow-y-auto">
                       <SelectItem value="all">전체</SelectItem>
                       <SelectItem value="성인">성인</SelectItem>
                       <SelectItem value="청소년">청소년</SelectItem>
@@ -410,8 +410,10 @@ function ProgramCard({ program }: { program: Program }) {
               {program.isDisabilityProgram ? '장애인 대상' : '일반인 대상'}
             </Badge>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{program.facilityName}</p>
-          <div className="mt-auto space-y-2 text-sm">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">
+            {program.isDisabilityProgram ? `${program.startDate} ~ ${program.endDate}` : program.facilityName}
+          </p>
+          <div className="mt-auto space-y-1 text-sm">
             <p className="flex items-center text-gray-500">
               <Activity className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="truncate">{program.targetAudience}</span>
