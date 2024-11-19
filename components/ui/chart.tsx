@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, TooltipProps } from 'recharts'
+import { ResponsiveContainer, TooltipProps } from 'recharts'
 import { Card } from "@/components/ui/card"
 
 interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {

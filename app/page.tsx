@@ -33,7 +33,7 @@ export default function MainPage() {
                 AI PT
               </Link>
               <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                맞춤 운동 추천
+                스포츠강좌
               </Link>
               <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 지원사업
@@ -83,7 +83,7 @@ export default function MainPage() {
               AI PT
             </Link>
             <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              맞춤 운동 추천
+              스포츠강좌
             </Link>
             <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               지원사업
@@ -192,8 +192,8 @@ export default function MainPage() {
                   <div className="w-16 h-16 mb-4 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                     <Dumbbell className="h-8 w-8 text-purple-500" />
                   </div>
-                  <h3 className="text-lg font-bold mb-2">맞춤 운동 추천</h3>
-                  <p className="text-gray-600 dark:text-gray-400">개인의 체력과 목표에 맞는 운동 프로그램을 추천받으세요.</p>
+                  <h3 className="text-lg font-bold mb-2">스포츠강좌</h3>
+                  <p className="text-gray-600 dark:text-gray-400">스포츠 강좌 이용권 사용이 가능한 체육시설을 알아보세요.</p>
                 </motion.div>
               </Link>
 
@@ -257,7 +257,7 @@ export default function MainPage() {
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
               <ul className="space-y-2">
                 <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
-                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">스포츠강좌</Link></li>
                 <li><Link href="/support" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지원사업</Link></li>
                 <li><Link href="/soma" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">소마미술관</Link></li>
                 <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>

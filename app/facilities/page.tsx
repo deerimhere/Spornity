@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { MapPin, Phone, Search, ChevronDown, Menu, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { MapPin, Phone, Search, ChevronDown, Menu, X, ChevronLeft, ChevronRight, Map } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { motion } from 'framer-motion'
+import KakaoMap from '@/components/KakaoMap'
 import preprocessedDataRaw from '../../public/data/preprocessed_facilities_data.json'
 
 interface Facility {
@@ -17,10 +18,11 @@ interface Facility {
   type: string
   address: string
   phone: string
-  agencyPhone: string
   big: string
   normal: string
   small: string
+  longitude: string
+  latitude: string
 }
 
 interface PreprocessedData {
@@ -143,7 +145,7 @@ export default function FacilitiesPage() {
                 AI PT
               </Link>
               <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                맞춤 운동 추천
+                스포츠강좌
               </Link>
               <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 지원사업
@@ -193,7 +195,7 @@ export default function FacilitiesPage() {
               AI PT
             </Link>
             <Link href="/fitness" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              맞춤 운동 추천
+              스포츠강좌
             </Link>
             <Link href="/support" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               지원사업
@@ -348,7 +350,7 @@ export default function FacilitiesPage() {
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">바로가기</h3>
               <ul className="space-y-2">
                 <li><Link href="/ai-pt" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">AI PT</Link></li>
-                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">맞춤 운동 추천</Link></li>
+                <li><Link href="/fitness" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">스포츠강좌</Link></li>
                 <li><Link href="/support" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">지원사업</Link></li>
                 <li><Link href="/soma" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">소마미술관</Link></li>
                 <li><Link href="/programs" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">프로그램</Link></li>
@@ -377,6 +379,8 @@ export default function FacilitiesPage() {
 }
 
 function FacilityCard({ facility }: { facility: Facility }) {
+  const hasLocation = facility.latitude !== "정보 없음" && facility.longitude !== "정보 없음"
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -422,8 +426,19 @@ function FacilityCard({ facility }: { facility: Facility }) {
             <p className="text-gray-700 dark:text-gray-300">{facility.phone}</p>
           </div>
           <div>
-            <h4 className="font-semibold text-sm text-gray-500 mb-1">기관 전화번호</h4>
-            <p className="text-gray-700 dark:text-gray-300">{facility.agencyPhone}</p>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">위치</h4>
+            {hasLocation ? (
+              <div className="w-full h-[300px] rounded-md overflow-hidden">
+                <KakaoMap
+                  latitude={parseFloat(facility.latitude)}
+                  longitude={parseFloat(facility.longitude)}
+                />
+              </div>
+            ) : (
+              <p className="text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 p-3 rounded-md">
+                위도와 경도 정보가 없어 위치를 지도에 표시할 수 없습니다.
+              </p>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-4">

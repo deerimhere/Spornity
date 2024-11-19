@@ -17,11 +17,11 @@ async function preprocessFacilityData() {
       type: row.type || '정보 없음',
       address: row.address || '정보 없음',
       phone: row.phone || '정보 없음',
-      agencyPhone: row.agencyPhone || '정보 없음',
-      disabilityFriendly: row.disabilityFriendly || '정보 없음',
       big: row.big || '정보 없음',
       normal: row.normal || ' ',
       small: row.small || ' ',
+      longitude: row.longitude || '정보 없음',
+      latitude: row.latitude || '정보 없음',
     }));
 
     // 고유한 지역 정보 추출
