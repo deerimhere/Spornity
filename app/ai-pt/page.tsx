@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { ChevronDown, Menu, X, Dumbbell, Clipboard, MessageSquare, User } from 'lucide-react'
 import { Button } from "@/components/ui/button"
@@ -42,7 +41,6 @@ export default function AIPTPage() {
     fitnessGoal: ''
   })
   const abortController = useRef<AbortController | null>(null)
-  const searchParams = useSearchParams()
 
   const generatePrompt = (type: string) => {
     const baseInfo = `${userInfo.age}세 ${userInfo.gender === 'male' ? '남성' : '여성'}입니다. 키 ${userInfo.height}cm, 체중 ${userInfo.weight}kg이며, 현재 활동량은 ${userInfo.activityLevel}입니다. 주요 목표는 ${userInfo.fitnessGoal}입니다.${userInfo.hasDisability ? ' 장애가 있어 ' + (userInfo.disabilityType ? userInfo.disabilityType + ' 장애가 있습니다.' : '특별한 고려가 필요합니다.') : ''}`
