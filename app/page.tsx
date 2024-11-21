@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X, ChevronDown, MapPin, Users, Dumbbell, Calendar, Palette, Bot, MessageSquare } from "lucide-react"
+import { Menu, X, ChevronDown, MapPin, Users, Dumbbell, Calendar, Palette, Bot, MessageSquare, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { motion } from 'framer-motion'
@@ -152,11 +152,86 @@ export default function MainPage() {
               <span className="bg-gradient-to-r from-sky-600 to-violet-600 bg-clip-text text-transparent">Spornity</span> 서비스
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <Link href="/facilities" className="group">
+              <Link href="/ai-pt" className="group">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
+                  className="flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 mb-4 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                    <Bot className="h-8 w-8 text-red-500" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">AI PT</h3>
+                  <p className="text-gray-600 dark:text-gray-400">AI 기술을 활용한 개인 맞춤형 트레이닝을 경험해보세요.</p>
+                </motion.div>
+              </Link>
+
+              <Link href="/fitness" className="group">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 mb-4 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                    <Dumbbell className="h-8 w-8 text-purple-500" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">스포츠강좌</h3>
+                  <p className="text-gray-600 dark:text-gray-400">스포츠 강좌 이용권 사용이 가능한 체육시설을 알아보세요.</p>
+                </motion.div>
+              </Link>
+
+              <Link href="/support" className="group">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 mb-4 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                    <Briefcase className="h-8 w-8 text-indigo-500" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">지원사업</h3>
+                  <p className="text-gray-600 dark:text-gray-400">스포츠 관련 지원 사업 정보를 확인하고 신청하세요.</p>
+                </motion.div>
+              </Link>
+
+              <Link href="/soma" className="group">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 mb-4 rounded-full bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors">
+                    <Palette className="h-8 w-8 text-pink-500" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">소마미술관</h3>
+                  <p className="text-gray-600 dark:text-gray-400">운동과 문화생활을 동시에 즐겨보세요.</p>
+                </motion.div>
+              </Link>
+
+              <Link href="/programs" className="group">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 mb-4 rounded-full bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
+                    <Calendar className="h-8 w-8 text-yellow-500" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">프로그램</h3>
+                  <p className="text-gray-600 dark:text-gray-400">다양한 공공체육시설의 프로그램 정보를 확인하세요.</p>
+                </motion.div>
+              </Link>
+
+              <Link href="/facilities" className="group">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
                   className="flex flex-col items-center text-center"
                 >
                   <div className="w-16 h-16 mb-4 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
@@ -171,7 +246,7 @@ export default function MainPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
                   className="flex flex-col items-center text-center"
                 >
                   <div className="w-16 h-16 mb-4 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
@@ -179,66 +254,6 @@ export default function MainPage() {
                   </div>
                   <h3 className="text-lg font-bold mb-2">지역 동호회</h3>
                   <p className="text-gray-600 dark:text-gray-400">같은 관심사를 가진 사람들과 함께 운동하세요.</p>
-                </motion.div>
-              </Link>
-
-              <Link href="/fitness" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <Dumbbell className="h-8 w-8 text-purple-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">스포츠강좌</h3>
-                  <p className="text-gray-600 dark:text-gray-400">스포츠 강좌 이용권 사용이 가능한 체육시설을 알아보세요.</p>
-                </motion.div>
-              </Link>
-
-              <Link href="/programs" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-                    <Calendar className="h-8 w-8 text-yellow-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">프로그램</h3>
-                  <p className="text-gray-600 dark:text-gray-400">다양한 공공체육시설의 프로그램 정보를 확인하세요.</p>
-                </motion.div>
-              </Link>
-
-              <Link href="/soma" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors">
-                    <Palette className="h-8 w-8 text-pink-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">소마미술관</h3>
-                  <p className="text-gray-600 dark:text-gray-400">운동과 문화생활을 동시에 즐겨보세요.</p>
-                </motion.div>
-              </Link>
-
-              <Link href="/ai-pt" className="group">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div className="w-16 h-16 mb-4 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                    <Bot className="h-8 w-8 text-red-500" />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">AI PT</h3>
-                  <p className="text-gray-600 dark:text-gray-400">AI 기술을 활용한 개인 맞춤형 트레이닝을 경험해보세요.</p>
                 </motion.div>
               </Link>
             </div>
@@ -284,3 +299,4 @@ export default function MainPage() {
     </div>
   )
 }
+

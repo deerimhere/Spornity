@@ -221,7 +221,7 @@ export default function PublicSportsClassesPage() {
                   공공체육시설 스포츠강좌 검색
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  당신의 건강한 삶을 위한 다양한 스포츠강좌를 찾아보세요.<br />
+                  스포츠 강좌 이용권이 사용 가능한 다양한 강좌를 찾아보세요.<br />
                   지역별, 종목별로 원하는 강좌를 쉽게 검색할 수 있습니다.
                 </p>
               </div>
