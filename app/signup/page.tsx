@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { KakaoLoginButton } from "../../components/KakaoLoginButton"
 
 export default function SignupPage() {
   const [name, setName] = useState('')
@@ -14,8 +15,8 @@ export default function SignupPage() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    // TODO: Implement signup logic
-    console.log('Signup attempt with:', { name, email, password, confirmPassword })
+    // TODO: 회원가입 로직 구현
+    console.log('회원가입 시도:', { name, email, password, confirmPassword })
   }
 
   return (
@@ -83,6 +84,17 @@ export default function SignupPage() {
               회원가입
             </Button>
           </form>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                또는
+              </span>
+            </div>
+          </div>
+          <KakaoLoginButton />
           <div className="text-center">
             <Link href="/login" className="text-sm text-blue-600 hover:underline">
               이미 계정이 있으신가요? 로그인
@@ -93,7 +105,7 @@ export default function SignupPage() {
 
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-muted-foreground">
-          © 2024 Spornity. 모든 권리 보유.
+          © 2024 Spornity. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link href="#" className="text-xs hover:underline underline-offset-4">이용약관</Link>
@@ -104,3 +116,4 @@ export default function SignupPage() {
     </div>
   )
 }
+
