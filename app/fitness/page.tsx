@@ -55,6 +55,7 @@ export default function PublicSportsClassesPage() {
   const [activeTab, setActiveTab] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false); // 스크립트 로드 상태 추가
 
   const citiesByRegion = useMemo(() => {
     const cities: { [key: string]: string[] } = { 'all': ['all'] };
@@ -147,7 +148,8 @@ export default function PublicSportsClassesPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <Script 
         src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&libraries=services,clusterer&autoload=false`} 
-        strategy="beforeInteractive"
+        strategy="afterInteractive" // 변경된 부분: strategy를 afterInteractive로 변경
+        onLoad={() => setIsScriptLoaded(true)} // 스크립트 로드 완료 후 상태 업데이트
       />
       <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4">
@@ -335,21 +337,21 @@ export default function PublicSportsClassesPage() {
                   <TabsContent value="all">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {currentClasses.map((sportsClass) => (
-                        <SportsClassCard key={sportsClass.id} sportsClass={sportsClass} />
+                        <SportsClassCard key={sportsClass.id} sportsClass={sportsClass} isScriptLoaded={isScriptLoaded} />
                       ))}
                     </div>
                   </TabsContent>
                   <TabsContent value="general">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {currentClasses.filter(cls => !cls.isDisabilityFriendly).map((sportsClass) => (
-                        <SportsClassCard key={sportsClass.id} sportsClass={sportsClass} />
+                        <SportsClassCard key={sportsClass.id} sportsClass={sportsClass} isScriptLoaded={isScriptLoaded} />
                       ))}
                     </div>
                   </TabsContent>
                   <TabsContent value="disability">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {currentClasses.filter(cls => cls.isDisabilityFriendly).map((sportsClass) => (
-                        <SportsClassCard key={sportsClass.id} sportsClass={sportsClass} />
+                        <SportsClassCard key={sportsClass.id} sportsClass={sportsClass} isScriptLoaded={isScriptLoaded} />
                       ))}
                     </div>
                   </TabsContent>
@@ -418,19 +420,12 @@ export default function PublicSportsClassesPage() {
   )
 }
 
-function SportsClassCard({ sportsClass }: { sportsClass: SportsClass }) {
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+function SportsClassCard({ sportsClass, isScriptLoaded }: { sportsClass: SportsClass; isScriptLoaded: boolean }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.kakao.maps.load(() => setIsMapLoaded(true));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isMapLoaded && isDialogOpen && sportsClass.latitude && sportsClass.longitude) {
-      const timer = setTimeout(() => {
+    if (isScriptLoaded && isDialogOpen && sportsClass.latitude && sportsClass.longitude) {
+      window.kakao.maps.load(() => {
         const container = document.getElementById(`map-${sportsClass.id}`);
         if (container) {
           const options = {
@@ -444,11 +439,9 @@ function SportsClassCard({ sportsClass }: { sportsClass: SportsClass }) {
           });
           marker.setMap(map);
         }
-      }, 100);
-
-      return () => clearTimeout(timer);
+      });
     }
-  }, [isMapLoaded, isDialogOpen, sportsClass]);
+  }, [isScriptLoaded, isDialogOpen, sportsClass]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
