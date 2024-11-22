@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Users, MapPin, Calendar, Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { Users, MapPin, Menu, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge"
 import { motion } from 'framer-motion'
 import preprocessedData from '../../public/data/preprocessed_club_data.json'
+import { ActivityStatistics } from '@/components/activity-statistics'
 
 interface Club {
   id: string
@@ -104,6 +105,14 @@ export default function ClubsPage() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  const activityStatistics = useMemo(() => {
+    return clubs.map(club => ({
+      region: club.region,
+      sport: club.sport,
+      count: 1
+    }))
+  }, [clubs])
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -275,6 +284,7 @@ export default function ClubsPage() {
                     )}
                   </div>
                 </div>
+                <ActivityStatistics statistics={activityStatistics} />
               </div>
               <div className="space-y-4">
                 <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
@@ -390,21 +400,12 @@ function ClubCard({ club }: { club: Club }) {
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{club.sport}</p>
           <div className="mt-auto space-y-2 text-sm">
             <p className="flex items-center text-gray-500">
-              {club.disabilityFriendly ? (
-                <>
-                  <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">모임 일정: {club.meetingDay}</span>
-                </>
-              ) : (
-                <>
-                  <Users className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">모임 인원: {club.members}명</span>
-                </>
-              )}
+              <Users className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{club.members}명</span>
             </p>
             <p className="flex items-center text-gray-500">
               <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-              <span className="truncate">지역: {club.region} {club.district}</span>
+              <span className="truncate">{club.location}</span>
             </p>
           </div>
         </motion.div>
@@ -418,22 +419,19 @@ function ClubCard({ club }: { club: Club }) {
             <h4 className="font-semibold text-sm text-gray-500 mb-1">종목</h4>
             <p className="text-gray-700 dark:text-gray-300">{club.sport}</p>
           </div>
-          {club.disabilityFriendly ? (
-            <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">모임 일정</h4>
-              <p className="text-gray-700 dark:text-gray-300">{club.meetingDay}</p>
-            </div>
-          ) : (
-            <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">모임 인원</h4>
-              <p className="text-gray-700 dark:text-gray-300">{club.members}명</p>
-            </div>
-          )}
           <div>
-            <h4 className="font-semibold text-sm text-gray-500 mb-1">지역</h4>
-            <p className="text-gray-700 dark:text-gray-300">{club.region} {club.district}</p>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">회원 수</h4>
+            <p className="text-gray-700 dark:text-gray-300">{club.members}</p>
           </div>
-          {club.disabilityFriendly && (
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">모임 요일</h4>
+            <p className="text-gray-700 dark:text-gray-300">{club.meetingDay}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">위치</h4>
+            <p className="text-gray-700 dark:text-gray-300">{club.location}</p>
+          </div>
+          {club.disabilityFriendly && club.disabilityType && (
             <div>
               <h4 className="font-semibold text-sm text-gray-500 mb-1">장애 유형</h4>
               <p className="text-gray-700 dark:text-gray-300">{club.disabilityType}</p>
@@ -441,14 +439,13 @@ function ClubCard({ club }: { club: Club }) {
           )}
           {club.introduction && (
             <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">동호회 소개</h4>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">소개</h4>
               <p className="text-gray-700 dark:text-gray-300">{club.introduction}</p>
             </div>
           )}
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
           <Badge variant="secondary">{club.disabilityFriendly ? '장애인 동호회' : '일반인 동호회'}</Badge>
-          <Badge variant="secondary">{club.sport}</Badge>
           <Badge variant="secondary">{club.region}</Badge>
           <Badge variant="secondary">{club.district}</Badge>
         </div>

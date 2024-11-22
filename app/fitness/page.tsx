@@ -12,10 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge"
 import { motion } from 'framer-motion'
 import preprocessedData from '../../public/data/preprocessed_sports_classes.json'
+import { LocationBasedRecommendations } from '../../components/location-based-recommendations'
+import { PopularClassesVisualization } from '../../components/popular-classes-visualization'
 
 declare global {
   interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     kakao: any;
   }
 }
@@ -52,6 +53,7 @@ export default function PublicSportsClassesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
 
   const citiesByRegion = useMemo(() => {
     const cities: { [key: string]: string[] } = { 'all': ['all'] };
@@ -98,6 +100,22 @@ export default function PublicSportsClassesPage() {
     setCurrentPage(1)
   }, [sportsClasses, selectedRegion, selectedCity, searchTerm, activeTab])
 
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          })
+        },
+        error => {
+          console.error("사용자 위치를 가져오는 중 오류 발생:", error)
+        }
+      )
+    }
+  }, [])
+
   const handleRegionChange = (value: string) => {
     setSelectedRegion(value)
     setSelectedCity('all')
@@ -112,6 +130,17 @@ export default function PublicSportsClassesPage() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  const popularClassTypes = useMemo(() => {
+    const classTypeCounts = filteredClasses.reduce((acc, cls) => {
+      acc[cls.sportName] = (acc[cls.sportName] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    return Object.entries(classTypeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+  }, [filteredClasses])
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -287,6 +316,13 @@ export default function PublicSportsClassesPage() {
                     )}
                   </div>
                 </div>
+                {userLocation && (
+                  <LocationBasedRecommendations
+                    userLocation={userLocation}
+                    sportsClasses={sportsClasses}
+                  />
+                )}
+                <PopularClassesVisualization popularClassTypes={popularClassTypes} />
               </div>
               <div className="space-y-4">
                 <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
@@ -382,109 +418,107 @@ export default function PublicSportsClassesPage() {
 }
 
 function SportsClassCard({ sportsClass }: { sportsClass: SportsClass }) {
-    const [isMapLoaded, setIsMapLoaded] = useState(false);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-    useEffect(() => {
-      if (typeof window !== "undefined") {
-        window.kakao.maps.load(() => setIsMapLoaded(true));
-      }
-    }, []);
-  
-    useEffect(() => {
-      if (isMapLoaded && isDialogOpen && sportsClass.latitude && sportsClass.longitude) {
-        // 컨테이너가 렌더링되었는지 확인하기 위한 작은 지연
-        const timer = setTimeout(() => {
-          const container = document.getElementById(`map-${sportsClass.id}`);
-          if (container) {
-            const options = {
-              center: new window.kakao.maps.LatLng(sportsClass.latitude, sportsClass.longitude),
-              level: 3
-            };
-            const map = new window.kakao.maps.Map(container, options);
-            const markerPosition = new window.kakao.maps.LatLng(sportsClass.latitude, sportsClass.longitude);
-            const marker = new window.kakao.maps.Marker({
-              position: markerPosition
-            });
-            marker.setMap(map);
-          }
-        }, 100);
-  
-        return () => clearTimeout(timer);
-      }
-    }, [isMapLoaded, isDialogOpen, sportsClass]);
-  
-    return (
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[150px] flex flex-col"
-          >
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 truncate">
-                {sportsClass.facilityName}
-              </h3>
-              <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2 flex-shrink-0">
-                {sportsClass.isDisabilityFriendly ? '장애인 강좌' : '일반인 강좌'}
-              </Badge>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{sportsClass.sportName}</p>
-            <div className="mt-auto space-y-2 text-sm">
-              <p className="flex items-center text-gray-500">
-                <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">{sportsClass.region} {sportsClass.city}</span>
-              </p>
-              <p className="flex items-center text-gray-500">
-                <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">{sportsClass.phone}</span>
-              </p>
-            </div>
-          </motion.div>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">{sportsClass.facilityName}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4">
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.kakao.maps.load(() => setIsMapLoaded(true));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isMapLoaded && isDialogOpen && sportsClass.latitude && sportsClass.longitude) {
+      const timer = setTimeout(() => {
+        const container = document.getElementById(`map-${sportsClass.id}`);
+        if (container) {
+          const options = {
+            center: new window.kakao.maps.LatLng(sportsClass.latitude, sportsClass.longitude),
+            level: 3
+          };
+          const map = new window.kakao.maps.Map(container, options);
+          const markerPosition = new window.kakao.maps.LatLng(sportsClass.latitude, sportsClass.longitude);
+          const marker = new window.kakao.maps.Marker({
+            position: markerPosition
+          });
+          marker.setMap(map);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isMapLoaded, isDialogOpen, sportsClass]);
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="group cursor-pointer p-4 rounded-lg transition-all duration-300 bg-gradient-to-br from-blue-50/30 to-purple-50/30 hover:from-blue-100/40 hover:to-purple-100/40 dark:from-blue-900/30 dark:to-purple-900/30 dark:hover:from-blue-800/40 dark:hover:to-purple-800/40 shadow-lg hover:shadow-lg dark:shadow-gray-800/40 dark:hover:shadow-gray-700/50 border border-gray-200 dark:border-gray-700 h-[150px] flex flex-col"
+        >
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 truncate">
+              {sportsClass.facilityName}
+            </h3>
+            <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2 flex-shrink-0">
+              {sportsClass.isDisabilityFriendly ? '장애인 강좌' : '일반인 강좌'}
+            </Badge>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{sportsClass.sportName}</p>
+          <div className="mt-auto space-y-2 text-sm">
+            <p className="flex items-center text-gray-500">
+              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{sportsClass.region} {sportsClass.city}</span>
+            </p>
+            <p className="flex items-center text-gray-500">
+              <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{sportsClass.phone}</span>
+            </p>
+          </div>
+        </motion.div>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">{sportsClass.facilityName}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">종목</h4>
+            <p className="text-gray-700 dark:text-gray-300">{sportsClass.sportName}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">주소</h4>
+            <p className="text-gray-700 dark:text-gray-300">{sportsClass.address}</p>
+          </div>
+          {sportsClass.detailAddress && (
             <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">종목</h4>
-              <p className="text-gray-700 dark:text-gray-300">{sportsClass.sportName}</p>
+              <h4 className="font-semibold text-sm text-gray-500 mb-1">상세 주소</h4>
+              <p className="text-gray-700 dark:text-gray-300">{sportsClass.detailAddress}</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">주소</h4>
-              <p className="text-gray-700 dark:text-gray-300">{sportsClass.address}</p>
-            </div>
-            {sportsClass.detailAddress && (
-              <div>
-                <h4 className="font-semibold text-sm text-gray-500 mb-1">상세 주소</h4>
-                <p className="text-gray-700 dark:text-gray-300">{sportsClass.detailAddress}</p>
-              </div>
+          )}
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">전화번호</h4>
+            <p className="text-gray-700 dark:text-gray-300">{sportsClass.phone}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm text-gray-500 mb-1">위치</h4>
+            {sportsClass.longitude && sportsClass.latitude ? (
+              <div id={`map-${sportsClass.id}`} style={{ width: '100%', height: '300px' }}></div>
+            ) : (
+              <p className="text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 p-3 rounded-md">
+                위도와 경도 정보가 없어 위치를 지도에 표시할 수 없습니다.
+              </p>
             )}
-            <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">전화번호</h4>
-              <p className="text-gray-700 dark:text-gray-300">{sportsClass.phone}</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-sm text-gray-500 mb-1">위치</h4>
-              {sportsClass.longitude && sportsClass.latitude ? (
-                <div id={`map-${sportsClass.id}`} style={{ width: '100%', height: '300px' }}></div>
-              ) : (
-                <p className="text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 p-3 rounded-md">
-                  위도와 경도 정보가 없어 위치를 지도에 표시할 수 없습니다.
-                </p>
-              )}
-            </div>
           </div>
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Badge variant="secondary">{sportsClass.isDisabilityFriendly ? '장애인 강좌' : '일반인 강좌'}</Badge>
-            <Badge variant="secondary">{sportsClass.sportName}</Badge>
-            <Badge variant="secondary">{sportsClass.region}</Badge>
-            <Badge variant="secondary">{sportsClass.city}</Badge>
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
-  }
+        </div>
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Badge variant="secondary">{sportsClass.isDisabilityFriendly ? '장애인 강좌' : '일반인 강좌'}</Badge>
+          <Badge variant="secondary">{sportsClass.region}</Badge>
+          <Badge variant="secondary">{sportsClass.city}</Badge>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
