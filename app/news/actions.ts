@@ -136,18 +136,25 @@ export async function analyzeTrendWithAI(date?: string): Promise<string> {
     })
   }
 
-  const newsContent = targetNews.map(item => `${item.title}\n${item.description}`).join('\n\n')
+  // 뉴스 개수 제한 (예: 최신 20개만 사용)
+  targetNews = targetNews
+    .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
+    .slice(0, 20)
+
+  const newsContent = targetNews
+    .map(item => item.title) // description은 제외하고 제목만 사용
+    .join('\n')
 
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "system",
-        content: "You are a sports news analyst. Analyze the given sports news and provide a brief trend analysis."
+        content: "You are a sports news analyst. Analyze the given sports news titles and provide a brief trend analysis in Korean language."
       },
       {
         role: "user",
-        content: `Analyze the following sports news and provide a brief trend analysis:\n\n${newsContent}`
+        content: `Analyze the following sports news titles and provide a brief trend analysis:\n\n${newsContent}`
       }
     ],
     max_tokens: 150

@@ -23,16 +23,21 @@ export function WordCloud({ date }: WordCloudProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
-    analyzeWordFrequency(date).then(result => 
-      setWords(result.map(item => ({ text: item.text, value: item.value })))
-    )
+    analyzeWordFrequency(date).then(result => {
+      // 상위 30개 단어만 사용
+      const topWords = result
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 30)
+        .map(item => ({ text: item.text, value: item.value }))
+      setWords(topWords)
+    })
   }, [date])
 
   useEffect(() => {
     if (words.length === 0 || !svgRef.current) return
 
     const svg = d3.select(svgRef.current)
-    svg.selectAll("*").remove() // Clear previous content
+    svg.selectAll("*").remove()
 
     const width = 600
     const height = 400
@@ -69,11 +74,12 @@ export function WordCloud({ date }: WordCloudProps) {
   const handleAnalyzeClick = async () => {
     setIsLoading(true)
     try {
+      // date만 전달
       const analysis = await analyzeTrendWithAI(date)
       setAiAnalysis(analysis)
     } catch (error) {
       console.error('트렌드 분석 중 오류 발생:', error)
-      setAiAnalysis('트렌드 분석 중 오류가 발생했습니다.')
+      setAiAnalysis('트렌드 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
     } finally {
       setIsLoading(false)
     }
@@ -84,13 +90,17 @@ export function WordCloud({ date }: WordCloudProps) {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <CardTitle>{date ? `${date} 기준 ` : ''}자주 등장하는 단어</CardTitle>
+        <CardTitle>{date ? `${date} 기준 ` : ''}자주 등장하는 단어 (상위 30개)</CardTitle>
       </CardHeader>
       <CardContent>
         <svg ref={svgRef} width="100%" height="400" />
         <div className="mt-4">
-          <Button onClick={handleAnalyzeClick} disabled={isLoading}>
-            {isLoading ? '분석 중...' : 'AI 트렌드 분석'}
+          <Button 
+            onClick={handleAnalyzeClick} 
+            disabled={isLoading}
+            className="relative"
+          >
+            {isLoading ? '분석 중...' : 'AI 트렌드 분석 (상위 15개 단어)'}
           </Button>
         </div>
         {aiAnalysis && (
@@ -103,4 +113,3 @@ export function WordCloud({ date }: WordCloudProps) {
     </Card>
   )
 }
-
