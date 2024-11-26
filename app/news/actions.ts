@@ -20,6 +20,13 @@ interface WordFrequency {
 
 let newsCache: NewsItem[] = []
 
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
+
+if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
+  throw new Error('Naver API credentials are not set in environment variables');
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -33,11 +40,11 @@ async function fetchNaverSportsNews(query: string): Promise<NewsItem[]> {
       category: 'sports'
     },
     headers: {
-      'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID,
-      'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET,
+      'X-Naver-Client-Id': NAVER_CLIENT_ID,
+      'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
     },
   })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return response.data.items.map((item: any) => ({
     ...item,
     source: 'Naver'
@@ -119,10 +126,35 @@ export async function analyzeWordFrequency(date?: string): Promise<WordFrequency
     })
   })
 
-  return Object.entries(wordCount)
+  const sortedWords = Object.entries(wordCount)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 100)
+    .slice(0, 200)  // 상위 200개 단어만 선택 (API 요청 제한을 고려)
+
+  // OpenAI API를 사용하여 스포츠 관련 단어 필터링
+  const wordsToCheck = sortedWords.map(([word]) => word).join(', ')
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: "You are a sports terminology expert. Your task is to identify sports-related words from a given list."
+      },
+      {
+        role: "user",
+        content: `다음 단어 목록에서 스포츠와 관련된 단어만 선택하세요. 선택한 단어들을 쉼표로 구분하여 반환하세요:\n\n${wordsToCheck}`
+      }
+    ],
+    max_tokens: 200
+  });
+
+  const sportsRelatedWords = response.choices[0].message.content?.split(',').map(word => word.trim()) || [];
+
+  const filteredWordFrequency = sortedWords
+    .filter(([word]) => sportsRelatedWords.includes(word))
     .map(([text, value]) => ({ text, value }))
+    .slice(0, 100);  // 최종적으로 상위 100개 단어만 반환
+
+  return filteredWordFrequency;
 }
 
 export async function analyzeTrendWithAI(date?: string): Promise<string> {
@@ -162,3 +194,4 @@ export async function analyzeTrendWithAI(date?: string): Promise<string> {
 
   return response.choices[0].message.content || "트렌드 분석을 수행할 수 없습니다.";
 }
+

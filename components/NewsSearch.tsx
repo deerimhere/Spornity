@@ -27,8 +27,8 @@ export function NewsSearch({ initialQuery, initialDate }: NewsSearchProps) {
   }
 
   return (
-    <form onSubmit={handleSearch} className="mb-6 space-y-4">
-      <div className="flex gap-2">
+    <form onSubmit={handleSearch} className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Input
           type="text"
           value={query}
@@ -38,7 +38,7 @@ export function NewsSearch({ initialQuery, initialDate }: NewsSearchProps) {
         />
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className={cn("w-[240px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
+            <Button variant="outline" className={cn("w-full sm:w-[240px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
               {date ? format(date, "PPP") : <span>뉴스 날짜 선택</span>}
             </Button>
@@ -52,8 +52,8 @@ export function NewsSearch({ initialQuery, initialDate }: NewsSearchProps) {
             />
           </PopoverContent>
         </Popover>
-        <Button type="submit">검색</Button>
       </div>
+      <Button type="submit" className="w-full">검색</Button>
     </form>
   )
 }

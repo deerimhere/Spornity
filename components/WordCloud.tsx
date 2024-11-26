@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import * as d3 from 'd3'
 import cloud from 'd3-cloud'
 import { analyzeWordFrequency, analyzeTrendWithAI } from '@/app/news/actions'
@@ -39,8 +40,8 @@ export function WordCloud({ date }: WordCloudProps) {
     const svg = d3.select(svgRef.current)
     svg.selectAll("*").remove()
 
-    const width = 600
-    const height = 400
+    const width = svgRef.current.clientWidth
+    const height = svgRef.current.clientHeight
 
     const layout = cloud<Word>()
       .size([width, height])
@@ -53,8 +54,6 @@ export function WordCloud({ date }: WordCloudProps) {
     layout.start()
 
     function draw(words: Word[]) {
-      const color = d3.scaleOrdinal(d3.schemeCategory10)
-
       svg.attr("width", layout.size()[0])
          .attr("height", layout.size()[1])
          .append("g")
@@ -63,8 +62,8 @@ export function WordCloud({ date }: WordCloudProps) {
          .data(words)
          .enter().append("text")
          .style("font-size", d => `${d.size}px`)
-         .style("font-family", "Impact")
-         .style("fill", (_, i) => color(i.toString()))
+         .style("font-family", "Inter, sans-serif")
+         .style("fill", (_, i) => `hsl(${i * 360 / words.length}, 70%, 50%)`)
          .attr("text-anchor", "middle")
          .attr("transform", d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
          .text(d => d.text)
@@ -85,30 +84,37 @@ export function WordCloud({ date }: WordCloudProps) {
     }
   }
 
-  if (words.length === 0) return null
+  if (words.length === 0) return <Skeleton className="w-full h-[500px] rounded-xl" />
 
   return (
-    <Card className="mb-8">
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>{date ? `${date} 기준 ` : ''}자주 등장하는 단어 (상위 30개)</CardTitle>
+        <CardTitle>{date ? `${date} 기준 ` : ''}자주 등장하는 단어</CardTitle>
+        <CardDescription>상위 30개 단어를 시각화한 워드 클라우드입니다.</CardDescription>
       </CardHeader>
       <CardContent>
-        <svg ref={svgRef} width="100%" height="400" />
-        <div className="mt-4">
+        <div className="relative aspect-video">
+          <svg ref={svgRef} className="w-full h-full" />
+        </div>
+        <div className="mt-6 space-y-4">
           <Button 
             onClick={handleAnalyzeClick} 
             disabled={isLoading}
-            className="relative"
+            className="w-full"
           >
             {isLoading ? '분석 중...' : 'AI 트렌드 분석 (상위 15개 단어)'}
           </Button>
+          {aiAnalysis && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">AI 트렌드 분석 결과</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{aiAnalysis}</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
-        {aiAnalysis && (
-          <div className="mt-4 p-4 bg-gray-100 rounded-md">
-            <h3 className="text-lg font-semibold mb-2">AI 트렌드 분석 결과:</h3>
-            <p>{aiAnalysis}</p>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

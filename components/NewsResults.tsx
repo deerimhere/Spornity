@@ -28,25 +28,23 @@ export async function NewsResults({ query, page, date }: NewsResultsProps) {
   const totalPages = Math.ceil(total / pageSize)
 
   return (
-    <>
+    <div className="space-y-6">
       {date && (
         <h2 className="text-xl font-semibold mb-4">
           {format(new Date(date), 'yyyy년 MM월 dd일')} 뉴스
         </h2>
       )}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+      <div className="space-y-4">
         {news.map((item, index) => (
           <Card key={index}>
-            <CardHeader>
-              <CardTitle className="text-lg flex justify-between items-start">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start mb-2">
                 <a href={item.link} target="_blank" rel="noopener noreferrer" 
-                   className="hover:underline" dangerouslySetInnerHTML={{ __html: item.title }} />
-                <Badge variant="outline" className="ml-2">{item.source}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: item.description }} />
-              <p className="text-xs text-gray-500 mt-2">{new Date(item.pubDate).toLocaleString('ko-KR')}</p>
+                   className="text-lg font-semibold hover:underline" dangerouslySetInnerHTML={{ __html: item.title }} />
+                <Badge variant="outline">{item.source}</Badge>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2" dangerouslySetInnerHTML={{ __html: item.description }} />
+              <p className="text-xs text-gray-500">{new Date(item.pubDate).toLocaleString('ko-KR')}</p>
             </CardContent>
           </Card>
         ))}
@@ -77,6 +75,7 @@ export async function NewsResults({ query, page, date }: NewsResultsProps) {
           </PaginationItem>
         </PaginationContent>
       </Pagination>
-    </>
+    </div>
   )
 }
+
