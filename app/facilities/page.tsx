@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { MapPin, Phone, Search, ChevronDown, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MapPin, Phone, Search, ChevronDown, Menu, X, ChevronLeft, ChevronRight, Map } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,7 @@ interface Facility {
   id: string
   name: string
   type: string
-  address: string  
+  address: string
   phone: string
   big: string
   normal: string

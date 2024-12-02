@@ -1,52 +1,70 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import Script from 'next/script'
 
-interface KakaoMapProps {
-  latitude: number
-  longitude: number
-}
-
+// Define types for Kakao Maps API
 declare global {
   interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    kakao: any
+    kakao: {
+      maps: KakaoMaps;
+    };
   }
+}
+
+interface KakaoMaps {
+  LatLng: new (lat: number, lng: number) => LatLng;
+  Map: new (container: HTMLElement, options: MapOptions) => Map;
+  Marker: new (options: MarkerOptions) => Marker;
+}
+
+interface LatLng {
+  getLat(): number;
+  getLng(): number;
+}
+
+interface MapOptions {
+  center: LatLng;
+  level: number;
+}
+
+interface Map {
+  setCenter(latlng: LatLng): void;
+}
+
+interface MarkerOptions {
+  position: LatLng;
+}
+
+interface Marker {
+  setMap(map: Map | null): void;
+}
+
+interface KakaoMapProps {
+  latitude: number;
+  longitude: number;
 }
 
 export default function KakaoMap({ latitude, longitude }: KakaoMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null)
-
-  const loadKakaoMap = () => {
-    if (typeof window.kakao === 'undefined' || !mapRef.current) return
-
-    window.kakao.maps.load(() => {
-      const mapOption = {
-        center: new window.kakao.maps.LatLng(latitude, longitude),
-        level: 3
-      }
-      const map = new window.kakao.maps.Map(mapRef.current, mapOption)
-      const markerPosition = new window.kakao.maps.LatLng(latitude, longitude)
-      const marker = new window.kakao.maps.Marker({
-        position: markerPosition
-      })
-      marker.setMap(map)
-    })
-  }
+  const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadKakaoMap()
-  }, [latitude, longitude])
+    if (typeof window !== 'undefined' && mapRef.current) {
+      const { kakao } = window;
 
-  return (
-    <>
-      <Script
-        strategy="lazyOnload"
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false`}
-        onLoad={loadKakaoMap}
-      />
-      <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
-    </>
-  )
+      const position = new kakao.maps.LatLng(latitude, longitude);
+      const options: MapOptions = {
+        center: position,
+        level: 3
+      };
+
+      const map = new kakao.maps.Map(mapRef.current, options);
+      const marker = new kakao.maps.Marker({
+        position: position
+      });
+
+      marker.setMap(map);
+    }
+  }, [latitude, longitude]);
+
+  return <div ref={mapRef} style={{ width: '100%', height: '300px' }} />;
 }
