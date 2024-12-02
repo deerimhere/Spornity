@@ -168,25 +168,18 @@ export async function analyzeTrendWithAI(date?: string): Promise<string> {
     })
   }
 
-  // 뉴스 개수 제한 (예: 최신 20개만 사용)
-  targetNews = targetNews
-    .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
-    .slice(0, 20)
-
-  const newsContent = targetNews
-    .map(item => item.title) // description은 제외하고 제목만 사용
-    .join('\n')
+  const newsContent = targetNews.map(item => `${item.title}\n${item.description}`).join('\n\n')
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-3.5-turbo",
     messages: [
       {
         role: "system",
-        content: "You are a sports news analyst. Analyze the given sports news titles and provide a brief trend analysis in Korean language."
+        content: "You are a sports news analyst. Analyze the given sports news and provide a brief trend analysis."
       },
       {
         role: "user",
-        content: `Analyze the following sports news titles and provide a brief trend analysis:\n\n${newsContent}`
+        content: `Analyze the following sports news and provide a brief trend analysis:\n\n${newsContent}`
       }
     ],
     max_tokens: 150
@@ -194,4 +187,7 @@ export async function analyzeTrendWithAI(date?: string): Promise<string> {
 
   return response.choices[0].message.content || "트렌드 분석을 수행할 수 없습니다.";
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of 785bc4d (오류 수정)

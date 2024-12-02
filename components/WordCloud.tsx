@@ -24,21 +24,16 @@ export function WordCloud({ date }: WordCloudProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
-    analyzeWordFrequency(date).then(result => {
-      // 상위 30개 단어만 사용
-      const topWords = result
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 30)
-        .map(item => ({ text: item.text, value: item.value }))
-      setWords(topWords)
-    })
+    analyzeWordFrequency(date).then(result => 
+      setWords(result.map(item => ({ text: item.text, value: item.value })))
+    )
   }, [date])
 
   useEffect(() => {
     if (words.length === 0 || !svgRef.current) return
 
     const svg = d3.select(svgRef.current)
-    svg.selectAll("*").remove()
+    svg.selectAll("*").remove() // Clear previous content
 
     const width = svgRef.current.clientWidth
     const height = svgRef.current.clientHeight
@@ -73,12 +68,11 @@ export function WordCloud({ date }: WordCloudProps) {
   const handleAnalyzeClick = async () => {
     setIsLoading(true)
     try {
-      // date만 전달
       const analysis = await analyzeTrendWithAI(date)
       setAiAnalysis(analysis)
     } catch (error) {
       console.error('트렌드 분석 중 오류 발생:', error)
-      setAiAnalysis('트렌드 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      setAiAnalysis('트렌드 분석 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -90,6 +84,7 @@ export function WordCloud({ date }: WordCloudProps) {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{date ? `${date} 기준 ` : ''}자주 등장하는 단어</CardTitle>
+<<<<<<< HEAD
         <CardDescription>상위 30개 단어를 시각화한 워드 클라우드입니다.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -103,6 +98,14 @@ export function WordCloud({ date }: WordCloudProps) {
             className="w-full"
           >
             {isLoading ? '분석 중...' : 'AI 트렌드 분석 (상위 15개 단어)'}
+=======
+      </CardHeader>
+      <CardContent>
+        <svg ref={svgRef} width="100%" height="400" />
+        <div className="mt-4">
+          <Button onClick={handleAnalyzeClick} disabled={isLoading}>
+            {isLoading ? '분석 중...' : 'AI 트렌드 분석'}
+>>>>>>> parent of 785bc4d (오류 수정)
           </Button>
           {aiAnalysis && (
             <Card>
@@ -119,3 +122,4 @@ export function WordCloud({ date }: WordCloudProps) {
     </Card>
   )
 }
+
