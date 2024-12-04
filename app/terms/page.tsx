@@ -35,6 +35,7 @@ export default function TermsPage() {
               { title: "2. 이용 제한", content: "본 서비스는 실제 운영되는 서비스가 아니므로, 사용자 데이터의 저장이나 실제 거래 등의 기능은 제한될 수 있습니다." },
               { title: "3. 책임의 한계", content: "Spornity는 데모 프로젝트이므로, 서비스 이용으로 인해 발생할 수 있는 어떠한 손해에 대해서도 책임을 지지 않습니다." },
               { title: "4. 지적재산권", content: "Spornity에 포함된 모든 콘텐츠의 저작권은 개발자에게 있으며, 개발자가 허용한 경우를 제외한 사용을 금지합니다." },
+              { title: "5. Thanks to", content: "나의 첫번째 웹 프로젝트 Spornity, with 오병현, 박범준, 이상욱" },
             ].map((section, index) => (
               <div key={index} className="space-y-2">
                 <h2 className="text-2xl font-semibold text-gray-800">{section.title}</h2>
