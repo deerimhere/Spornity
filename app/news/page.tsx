@@ -3,6 +3,7 @@ import { NewsSearch } from '@/components/NewsSearch'
 import { NewsResults } from '@/components/NewsResults'
 import { WordCloud } from '@/components/WordCloud'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from 'next/link' // Link 컴포넌트를 임포트합니다.
 
 type SearchParams = {
   query?: string
@@ -11,6 +12,7 @@ type SearchParams = {
 }
 
 type PageProps = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params: Promise<any>
   searchParams: Promise<SearchParams>
 }
@@ -26,11 +28,11 @@ export default async function NewsPage({ searchParams }: PageProps) {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
-          <a href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2">
             <span className="font-bold text-2xl bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               Spornity
             </span>
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -85,4 +87,3 @@ export default async function NewsPage({ searchParams }: PageProps) {
     </div>
   )
 }
-
