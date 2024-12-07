@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, Users, ChevronDown, Menu, X, Search, ArrowRight } from "lucide-react"
+import { Calendar, Users, ChevronDown, Menu, X, Search } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -254,9 +254,6 @@ export default function SomaMuseumPage() {
                 animate={{opacity: 1, y: 0}}
                 transition={{duration: 0.8, delay: 0.4}}
               >
-                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100">
-                  전시 둘러보기 <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
               </motion.div>
             </div>
           </div>

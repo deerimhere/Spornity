@@ -250,11 +250,11 @@ export default function PublicSportsClassesPage() {
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  공공체육시설 스포츠강좌 검색
+                  스포츠강좌이용권 사용 트렌드 및 시설 검색
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  스포츠 강좌 이용권이 사용 가능한 다양한 강좌를 찾아보세요.<br />
-                  지역별, 종목별로 원하는 강좌를 쉽게 검색할 수 있습니다.
+                  스포츠 강좌 이용권이 사용 가능한 다양한 시설을 찾아보세요.<br />
+                  지역별, 종목별로 원하는 시설을 쉽게 검색할 수 있습니다.
                 </p>
               </div>
             </div>
@@ -266,7 +266,7 @@ export default function PublicSportsClassesPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">검색 필터</h2>
-                  <p className="text-gray-500 dark:text-gray-400">원하는 조건을 선택하여 스포츠강좌를 찾아보세요.</p>
+                  <p className="text-gray-500 dark:text-gray-400">원하는 조건을 선택하여 시설을 찾아보세요.</p>
                 </div>
                 <div className="space-y-4">
                   <Select onValueChange={handleRegionChange} value={selectedRegion}>
@@ -329,10 +329,9 @@ export default function PublicSportsClassesPage() {
               </div>
               <div className="space-y-4">
                 <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="all">전체</TabsTrigger>
-                    <TabsTrigger value="general">일반인 강좌</TabsTrigger>
-                    <TabsTrigger value="disability">장애인 강좌</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="general">일반인 시설</TabsTrigger>
+                    <TabsTrigger value="disability">장애인 이용 가능 시설</TabsTrigger>
                   </TabsList>
                   <TabsContent value="all">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -457,7 +456,7 @@ function SportsClassCard({ sportsClass, isScriptLoaded }: { sportsClass: SportsC
               {sportsClass.facilityName}
             </h3>
             <Badge variant="outline" className="bg-white text-black whitespace-nowrap ml-2 flex-shrink-0">
-              {sportsClass.isDisabilityFriendly ? '장애인 강좌' : '일반인 강좌'}
+              {sportsClass.isDisabilityFriendly ? '장애인 대상' : '일반인 대상'}
             </Badge>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{sportsClass.sportName}</p>
@@ -508,7 +507,7 @@ function SportsClassCard({ sportsClass, isScriptLoaded }: { sportsClass: SportsC
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
-          <Badge variant="secondary">{sportsClass.isDisabilityFriendly ? '장애인 강좌' : '일반인 강좌'}</Badge>
+          <Badge variant="secondary">{sportsClass.isDisabilityFriendly ? '장애인 대상' : '일반인 대상'}</Badge>
           <Badge variant="secondary">{sportsClass.region}</Badge>
           <Badge variant="secondary">{sportsClass.city}</Badge>
         </div>
